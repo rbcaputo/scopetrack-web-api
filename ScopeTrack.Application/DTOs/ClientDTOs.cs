@@ -6,6 +6,7 @@
   );
 
   public sealed record ClientPutDTO(
+    Guid ID,
     string Name,
     string ContactEmail
   );

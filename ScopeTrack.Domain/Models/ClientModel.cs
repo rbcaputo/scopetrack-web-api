@@ -14,7 +14,11 @@ namespace ScopeTrack.Domain.Entities
     private readonly List<ContractModel> _contracts = [];
     public IReadOnlyList<ContractModel> Contracts => _contracts.AsReadOnly();
 
-    private ClientModel() { } // EF Core
+    private ClientModel() // EF Core
+    {
+      Name = string.Empty;
+      ContactEmail = string.Empty;
+    }
 
     public ClientModel(string name, string contactEmail)
     {
@@ -54,22 +58,15 @@ namespace ScopeTrack.Domain.Entities
       UpdatedAt = DateTime.UtcNow;
     }
 
-    public ContractModel AddContract(
-      string title,
-      string? description,
-      ContractType type
-    )
+    public void AddContract(ContractModel contract)
     {
       if (Status == ClientStatus.Inactive)
         throw new InvalidOperationException(
           "Cannot add contracts to an inactive client"
         );
 
-      ContractModel contract = new(ID, title, description, type);
       _contracts.Add(contract);
       UpdatedAt = DateTime.UtcNow;
-
-      return contract;
     }
   }
 }

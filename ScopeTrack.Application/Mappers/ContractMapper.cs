@@ -8,9 +8,11 @@ namespace ScopeTrack.Application.Mappers
   {
     public static ContractModel PostDTOToModel(ContractPostDTO dto)
     {
-      ContractType type = Enum.TryParse(dto.Type, out ContractType contractType)
-        ? contractType
-        : ContractType.FixedPrice;
+      if (!Enum.TryParse(dto.Type, out ContractType type))
+        throw new ArgumentException(
+          $"Invalid contract type: {dto.Type}",
+          dto.Type
+        );
 
       return new(
         dto.ClientID,
@@ -25,7 +27,7 @@ namespace ScopeTrack.Application.Mappers
       IReadOnlyList<DeliverableGetDTO> deliverables = [];
       if (model.Deliverables.Count > 0)
         deliverables = [.. model.Deliverables
-          .Select(d => DeliverableMapper.ModelToGetDTO(d))
+          .Select(DeliverableMapper.ModelToGetDTO)
         ];
 
       return new(

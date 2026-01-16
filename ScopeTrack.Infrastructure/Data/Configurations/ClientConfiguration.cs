@@ -19,6 +19,8 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
       builder.Property(c => c.ContactEmail)
         .IsRequired()
         .HasMaxLength(200);
+      builder.HasIndex(c => c.ContactEmail)
+        .IsUnique();
 
       builder.Property(c => c.Status)
         .IsRequired()
@@ -30,9 +32,9 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
       builder.Property(c => c.UpdatedAt)
         .IsRequired();
 
-      builder.HasMany(typeof(ContractModel))
+      builder.HasMany<ContractModel>("_contracts")
         .WithOne()
-        .HasForeignKey("ClientID")
+        .HasForeignKey(contract => contract.ClientID)
         .OnDelete(DeleteBehavior.Cascade);
     }
   }

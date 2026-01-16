@@ -16,7 +16,7 @@ namespace ScopeTrack.Application.Mappers
       IReadOnlyList<ContractGetDTO> contracts = [];
       if (model.Contracts.Count > 0)
         contracts = [.. model.Contracts
-          .Select(c => ContractMapper.ModelToGetDTO(c))
+          .Select(ContractMapper.ModelToGetDTO)
         ];
 
       return new(

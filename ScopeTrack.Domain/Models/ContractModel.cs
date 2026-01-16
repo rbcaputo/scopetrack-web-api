@@ -16,7 +16,11 @@ namespace ScopeTrack.Domain.Entities
     private readonly List<DeliverableModel> _deliverables = [];
     public IReadOnlyList<DeliverableModel> Deliverables => _deliverables;
 
-    private ContractModel() { } // EF Core
+    private ContractModel() // EF Core
+    {
+      Title = string.Empty;
+      Description = string.Empty;
+    }
 
     public ContractModel(
       Guid clientID,
@@ -43,32 +47,43 @@ namespace ScopeTrack.Domain.Entities
 
     public void Activate()
     {
+      if (Status == ContractStatus.Active)
+        throw new InvalidOperationException(
+          "Contract is already active"
+        );
+      if (Status == ContractStatus.Archived)
+        throw new InvalidOperationException(
+          "Cannot activate an archived contract"
+        );
+      if (Deliverables.Count == 0)
+        throw new InvalidOperationException(
+          "Cannot activate contract without at least one deliverable"
+        );
+
       Status = ContractStatus.Active;
       UpdatedAt = DateTime.UtcNow;
     }
 
     public void Archive()
     {
+      if (Status == ContractStatus.Archived)
+        throw new InvalidOperationException(
+          "Contract is already archived"
+        );
+
       Status = ContractStatus.Archived;
       UpdatedAt = DateTime.UtcNow;
     }
 
-    public DeliverableModel AddDeliverable(
-      string title,
-      string description,
-      DateTime? dueDate
-    )
+    public void AddDeliverable(DeliverableModel deliverable)
     {
       if (Status == ContractStatus.Archived)
         throw new InvalidOperationException(
           "Cannot add deliverables to an archived contract"
         );
 
-      DeliverableModel deliverable = new(ID, title, description, dueDate);
       _deliverables.Add(deliverable);
       UpdatedAt = DateTime.UtcNow;
-
-      return deliverable;
     }
   }
 }

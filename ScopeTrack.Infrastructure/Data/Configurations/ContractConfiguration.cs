@@ -36,9 +36,9 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
       builder.Property(c => c.UpdatedAt)
         .IsRequired();
 
-      builder.HasMany(typeof(DeliverableModel))
+      builder.HasMany<DeliverableModel>("_deliverables")
         .WithOne()
-        .HasForeignKey("ContractId")
+        .HasForeignKey(deliverable => deliverable.ContractID)
         .OnDelete(DeleteBehavior.Cascade);
     }
   }

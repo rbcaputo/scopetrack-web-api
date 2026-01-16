@@ -1,14 +1,13 @@
 ﻿namespace ScopeTrack.Application.DTOs
 {
   public sealed record DeliverablePostDTO(
-    Guid contractID,
     string Title,
     string Description,
     DateTime? DueDate
   );
 
   public sealed record DeliverablePatchDTO(
-    string Status
+    string NewStatus
   );
 
   public sealed record DeliverableGetDTO(

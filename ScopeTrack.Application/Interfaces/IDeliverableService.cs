@@ -1,22 +1,16 @@
 ﻿using ScopeTrack.Application.DTOs;
-using ScopeTrack.Domain.Enums;
+using ScopeTrack.Domain.Entities;
 
 namespace ScopeTrack.Application.Interfaces
 {
   public interface IDeliverableService
   {
-    Task<DeliverableGetDTO?> CreateAsync(
-      Guid contractID,
-      DeliverablePostDTO dto,
-      CancellationToken ct
-    );
-
+    Task StageAsync(DeliverableModel model, CancellationToken ct);
     Task<DeliverableGetDTO?> UpdateStatusAsync(
       Guid id,
-      DeliverableStatus newStatus,
+      DeliverablePatchDTO dto,
       CancellationToken ct
     );
-
-    Task<DeliverableGetDTO?> ReadByIDAsync(Guid id, CancellationToken ct);
+    Task<DeliverableGetDTO?> GetByIDAsync(Guid id, CancellationToken ct);
   }
 }

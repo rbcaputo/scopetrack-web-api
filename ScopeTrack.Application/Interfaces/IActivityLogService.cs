@@ -6,11 +6,10 @@ namespace ScopeTrack.Application.Interfaces
 {
   public interface IActivityLogService
   {
-    Task<ActivityLogGetDTO> CreateAsync(ActivityLogModel activityLog, CancellationToken ct);
-    
-    Task<IEnumerable<ActivityLogGetDTO>> ReadByEntityAsync(
+    Task StageAsync(ActivityLogModel model, CancellationToken ct);
+    Task<IReadOnlyList<ActivityLogGetDTO>> GetByEntityAsync(
       ActivityEntityType entityType,
-      Guid entityID,
+      Guid entityId,
       CancellationToken ct
     );
   }

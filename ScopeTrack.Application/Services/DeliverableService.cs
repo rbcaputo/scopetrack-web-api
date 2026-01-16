@@ -17,66 +17,54 @@ namespace ScopeTrack.Application.Services
     private readonly IActivityLogService _activityLogService =
       activityLogService;
 
-    public async Task<DeliverableGetDTO?> CreateAsync(
-      Guid contractID,
-      DeliverablePostDTO dto,
+    public async Task StageAsync(
+      DeliverableModel model,
+      CancellationToken ct
+    ) => await _context.AddAsync(model, ct);
+
+    public async Task<DeliverableGetDTO?> UpdateStatusAsync(
+      Guid id,
+      DeliverablePatchDTO dto,
       CancellationToken ct
     )
     {
+      DeliverableModel? deliverable = await _context.Deliverables
+        .SingleOrDefaultAsync(d => d.ID == id, ct);
+      if (deliverable is null)
+        return null;
+
       ContractModel? contract = await _context.Contracts
-        .FirstOrDefaultAsync(c => c.ID == contractID, ct);
+        .SingleOrDefaultAsync(c => c.ID == deliverable.ContractID, ct);
       if (contract is null)
         return null;
 
-      DeliverableModel deliverable = DeliverableMapper.PostDTOToModel(dto);
-      await _context.Deliverables.AddAsync(deliverable, ct);
-      await _context.SaveChangesAsync(ct);
+      if (!Enum.TryParse(dto.NewStatus, out DeliverableStatus newStatus))
+        throw new ArgumentOutOfRangeException(
+          nameof(dto),
+          "Invalid deliverable status"
+        );
+
+      deliverable.ChangeStatus(newStatus, contract.Status);
 
       ActivityLogModel activityLog = new(
         ActivityEntityType.Deliverable,
         deliverable.ID,
-        "Deliverable created"
+        ActivityType.StatusChanged,
+        "Deliverable status changed"
       );
 
-      await _activityLogService.CreateAsync(activityLog, ct);
-
-      return DeliverableMapper.ModelToGetDTO(deliverable);
-    }
-
-    public async Task<DeliverableGetDTO?> UpdateStatusAsync(
-      Guid id,
-      DeliverableStatus newStatus,
-      CancellationToken ct
-    )
-    {
-      DeliverableModel? deliverable = await _context.Deliverables
-        .FirstOrDefaultAsync(d => d.ID == id, ct);
-      if (deliverable is null)
-        return null;
-      ContractModel? contract = await _context.Contracts
-        .FirstOrDefaultAsync(c => c.ID == deliverable.ContractID, ct);
-      if (contract is null)
-        return null;
-
-      deliverable.ChangeStatus(newStatus, contract.Status);
-
-      ActivityLogModel? activityLog = await _context.ActivityLogs
-        .FirstOrDefaultAsync(a => a.EntityID == deliverable.ID, ct);
-      activityLog?.AppendDescription("Deliverable status updated");
-
+      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
       return DeliverableMapper.ModelToGetDTO(deliverable);
     }
 
-    public async Task<DeliverableGetDTO?> ReadByIDAsync(Guid id, CancellationToken ct)
-    {
-      DeliverableModel? deliverable = await _context.Deliverables
-        .FirstOrDefaultAsync(d => d.ID == id, ct);
-
-      return deliverable is not null
-        ? DeliverableMapper.ModelToGetDTO(deliverable)
-        : null;
-    }
+    public async Task<DeliverableGetDTO?> GetByIDAsync(Guid id, CancellationToken ct)
+      => await _context.Deliverables
+          .AsNoTracking()
+          .Where(d => d.ID == id)
+          .OrderBy(d => d.Status)
+          .Select(d => DeliverableMapper.ModelToGetDTO(d))
+          .SingleOrDefaultAsync(ct);
   }
 }

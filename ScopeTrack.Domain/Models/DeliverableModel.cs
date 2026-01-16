@@ -13,7 +13,11 @@ namespace ScopeTrack.Domain.Entities
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private DeliverableModel() { } // EF Core
+    private DeliverableModel() // EF Core
+    {
+      Title = string.Empty;
+      Description = string.Empty;
+    }
 
     public DeliverableModel(
       Guid contractID,

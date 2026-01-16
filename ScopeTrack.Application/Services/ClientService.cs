@@ -10,42 +10,42 @@ namespace ScopeTrack.Application.Services
 {
   public sealed class ClientService(
     ScopeTrackDbContext context,
-    IContractService contractService,
-    IActivityLogService activityLogService
+    IActivityLogService activityLogService,
+    IContractService contractService
   ) : IClientService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IContractService _contractService =
-      contractService;
     private readonly IActivityLogService _activityLogService =
       activityLogService;
+    private readonly IContractService _contractService =
+      contractService;
 
     public async Task<ClientGetDTO> CreateAsync(ClientPostDTO dto, CancellationToken ct)
     {
-      ClientModel client = new(dto.Name, dto.ContactEmail);
+      ClientModel client = ClientMapper.PostDTOToModel(dto);
 
       await _context.Clients.AddAsync(client, ct);
-      await _context.SaveChangesAsync(ct);
 
       ActivityLogModel activityLog = new(
         ActivityEntityType.Client,
         client.ID,
+        ActivityType.Created,
         "Client created"
       );
 
-      await _activityLogService.CreateAsync(activityLog, ct);
+      await _activityLogService.StageAsync(activityLog, ct);
+      await _context.SaveChangesAsync(ct);
 
       return ClientMapper.ModelToGetDTO(client);
     }
 
     public async Task<ClientGetDTO?> UpdateAsync(
-      Guid id,
       ClientPutDTO dto,
       CancellationToken ct
     )
     {
       ClientModel? client = await _context.Clients
-        .FirstOrDefaultAsync(c => c.ID == id, ct);
+        .SingleOrDefaultAsync(c => c.ID == dto.ID, ct);
       if (client is null)
         return null;
 
@@ -58,61 +58,67 @@ namespace ScopeTrack.Application.Services
     public async Task<ClientGetDTO?> ToggleStatusAsync(Guid id, CancellationToken ct)
     {
       ClientModel? client = await _context.Clients
-        .FirstOrDefaultAsync(c => c.ID == id, ct);
+        .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (client is null)
         return null;
 
       client.ToggleStatus();
 
-      ActivityLogModel? activityLog = await _context.ActivityLogs
-        .FirstOrDefaultAsync(a => a.EntityID == client.ID, ct);
-      activityLog?.AppendDescription($"Client status updated");
+      ActivityLogModel activityLog = new(
+        ActivityEntityType.Client,
+        client.ID,
+        ActivityType.StatusChanged,
+        "Client status changed"
+      );
 
+      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
       return ClientMapper.ModelToGetDTO(client);
     }
 
-    public async Task<ClientGetDTO?> AddContractAsync(
+    public async Task<ContractGetDTO?> AddContractAsync(
       Guid id,
       ContractPostDTO dto,
       CancellationToken ct
     )
     {
       ClientModel? client = await _context.Clients
-        .FirstOrDefaultAsync(c => c.ID == id, ct);
+        .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (client is null)
         return null;
 
-      await _contractService.CreateAsync(id, dto, ct);
+      ContractModel contract = ContractMapper.PostDTOToModel(dto);
+      client.AddContract(contract);
 
-      ContractType type = Enum.TryParse(dto.Type, out ContractType contractType)
-        ? contractType
-        : ContractType.FixedPrice;
-      client.AddContract(dto.Title, dto.Description, type);
+      ActivityLogModel activityLog = new(
+        ActivityEntityType.Contract,
+        contract.ID,
+        ActivityType.Created,
+        "Contract created"
+      );
+
+      await _contractService.StageAsync(contract, ct);
+      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return ClientMapper.ModelToGetDTO(client);
+      return ContractMapper.ModelToGetDTO(contract);
     }
 
-    public async Task<IEnumerable<ClientGetDTO>> ReadAllAsync(CancellationToken ct)
-    {
-      IEnumerable<ClientModel> clients = await _context.Clients
-        .ToListAsync(ct);
+    public async Task<ClientGetDTO?> GetByIDAsync(Guid id, CancellationToken ct)
+      => await _context.Clients
+          .Include(c => c.Contracts)
+          .AsNoTracking()
+          .Where(c => c.ID == id)
+          .Select(c => ClientMapper.ModelToGetDTO(c))
+          .SingleOrDefaultAsync(ct) ?? null;
 
-      return clients.Any()
-        ? clients.Select(c => ClientMapper.ModelToGetDTO(c))
-        : [];
-    }
-
-    public async Task<ClientGetDTO?> ReadByIDAsync(Guid id, CancellationToken ct)
-    {
-      ClientModel? client = await _context.Clients
-        .FirstOrDefaultAsync(c => c.ID == id, ct);
-
-      return client is not null
-        ? ClientMapper.ModelToGetDTO(client)
-        : null;
-    }
+    public async Task<IReadOnlyList<ClientGetDTO>> GetAllAsync(CancellationToken ct)
+      => await _context.Clients
+          .Include(c => c.Contracts)
+          .AsNoTracking()
+          .OrderBy(c => c.Status)
+          .Select(c => ClientMapper.ModelToGetDTO(c))
+          .ToListAsync(ct);
   }
 }
