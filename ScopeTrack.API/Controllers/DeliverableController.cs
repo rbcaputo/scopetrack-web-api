@@ -24,13 +24,13 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      ValidationResult validationResult =
-        await _patchValidator.ValidateAsync(dto, ct);
+      ValidationResult validationResult
+        = await _patchValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<DeliverableGetDTO> requestResult

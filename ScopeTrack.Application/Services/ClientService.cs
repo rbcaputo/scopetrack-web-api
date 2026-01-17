@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using ScopeTrack.Application.DTOs;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Mappers;
@@ -26,7 +27,7 @@ namespace ScopeTrack.Application.Services
     )
     {
       bool exists = await _context.Clients
-        .AnyAsync(c => c.Name == dto.Name || c.Email == dto.Email, ct);
+        .AnyAsync(c => c.Email == dto.Email, ct);
       if (exists)
         return RequestResult<ClientGetDTO>.Failure("Client already exists");
 
@@ -41,7 +42,16 @@ namespace ScopeTrack.Application.Services
       );
 
       await _activityLogService.StageAsync(activityLog, ct);
-      await _context.SaveChangesAsync(ct);
+
+      try
+      {
+        await _context.SaveChangesAsync(ct);
+      }
+      catch (DbUpdateException ex)
+        when (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2601)
+      {
+        return RequestResult<ClientGetDTO>.Failure("Client already exists");
+      }
 
       return RequestResult<ClientGetDTO>.Success(
         ClientMapper.ModelToGetDTO(client)

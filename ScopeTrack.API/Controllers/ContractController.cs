@@ -31,10 +31,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validationResult
         = await _patchValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<ContractGetDTO> requestResult
@@ -55,10 +55,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validationResult
         = await _deliverablePostValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<DeliverableGetDTO> requestResult

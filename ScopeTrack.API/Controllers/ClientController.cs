@@ -34,10 +34,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validationResult
         = await _clientPostValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<ClientGetDTO> requestResult
@@ -58,10 +58,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validationResult
         = await _putValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<ClientGetDTO> requestResult
@@ -96,10 +96,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validationResult
         = await _contractPostValidator.ValidateAsync(dto, ct);
       if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(e => new
+        return BadRequest(validationResult.Errors.Select(er => new
         {
-          field = e.PropertyName,
-          message = e.ErrorMessage
+          field = er.PropertyName,
+          message = er.ErrorMessage
         }));
 
       RequestResult<ContractGetDTO> requestResult
@@ -127,8 +127,8 @@ namespace ScopeTrack.API.Controllers
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(CancellationToken ct)
     {
-      RequestResult<IReadOnlyList<ClientGetDTO>> requestResult =
-        await _service.GetAllAsync(ct);
+      RequestResult<IReadOnlyList<ClientGetDTO>> requestResult
+        = await _service.GetAllAsync(ct);
 
       return Ok(requestResult.Value);
     }
