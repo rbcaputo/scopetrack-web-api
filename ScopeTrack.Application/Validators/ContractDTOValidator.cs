@@ -7,6 +7,10 @@ namespace ScopeTrack.Application.Validators
   {
     public ContractPostDTOValidadator()
     {
+      RuleFor(c => c.ClientID)
+        .NotEmpty()
+        .WithMessage("Client ID is required");
+
       RuleFor(c => c.Title)
         .NotEmpty()
         .WithMessage("Contract title is required")

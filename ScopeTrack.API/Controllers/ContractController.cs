@@ -25,6 +25,20 @@ namespace ScopeTrack.API.Controllers
         : NotFound(result.Error);
     }
 
+    [HttpPost("{id}")]
+    public async Task<IActionResult> AddDeliverableAsync(
+      Guid id,
+      DeliverablePostDTO dto,
+      CancellationToken ct
+    )
+    {
+      Result<DeliverableGetDTO> result = await _service.AddDeliverableAsync(id, dto, ct);
+
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetByIDAsync(
       Guid id,

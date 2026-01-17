@@ -1,6 +1,7 @@
 ﻿namespace ScopeTrack.Application.DTOs
 {
   public sealed record ContractPostDTO(
+    Guid ClientID,
     string Title,
     string? Description,
     string Type

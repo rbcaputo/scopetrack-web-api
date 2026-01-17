@@ -7,6 +7,7 @@ namespace ScopeTrack.Application.Interfaces
   {
     Task StageAsync(ContractModel contract, CancellationToken ct);
     Task<Result<ContractGetDTO>> UpdateStatusAsync(Guid id, ContractPatchDTO dto, CancellationToken ct);
+    Task<Result<DeliverableGetDTO>> AddDeliverableAsync(Guid id, DeliverablePostDTO dto, CancellationToken ct);
     Task<Result<ContractGetDTO>> GetByIDAsync(Guid id, CancellationToken ct);
   }
 }

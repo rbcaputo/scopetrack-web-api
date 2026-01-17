@@ -49,12 +49,13 @@ namespace ScopeTrack.Application.Services
     }
 
     public async Task<Result<ClientGetDTO>> UpdateAsync(
+      Guid id,
       ClientPutDTO dto,
       CancellationToken ct
     )
     {
       ClientModel? client = await _context.Clients
-        .SingleOrDefaultAsync(c => c.ID == dto.ID, ct);
+        .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (client is null)
         return Result<ClientGetDTO>.Failure("Client not found");
 

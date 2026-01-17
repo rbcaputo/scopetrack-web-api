@@ -24,13 +24,41 @@ namespace ScopeTrack.API.Controllers
         : Conflict(result.Error);
     }
 
-    [HttpPut]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAsync(
+      Guid id,
       ClientPutDTO dto,
       CancellationToken ct
     )
     {
-      Result<ClientGetDTO> result = await _service.UpdateAsync(dto, ct);
+      Result<ClientGetDTO> result = await _service.UpdateAsync(id, dto, ct);
+
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> ToggleStatusAsync(
+      Guid id,
+      CancellationToken ct
+    )
+    {
+      Result<ClientGetDTO> result = await _service.ToggleStatusAsync(id, ct);
+
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
+    }
+
+    [HttpPost("{id}")]
+    public async Task<IActionResult> AddContractAsync(
+      Guid id,
+      ContractPostDTO dto,
+      CancellationToken ct
+    )
+    {
+      Result<ContractGetDTO> result = await _service.AddContractAsync(id, dto, ct);
 
       return result.IsSuccess
         ? Ok(result.Value)

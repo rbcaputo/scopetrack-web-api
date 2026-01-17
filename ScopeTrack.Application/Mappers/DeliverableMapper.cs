@@ -7,7 +7,7 @@ namespace ScopeTrack.Application.Mappers
   {
     public static DeliverableModel PostDTOToModel(DeliverablePostDTO dto)
       => new(
-        dto.contractID,
+        dto.ContractID,
         dto.Title,
         dto.Description,
         dto.DueDate
