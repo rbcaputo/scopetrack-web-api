@@ -6,8 +6,8 @@ namespace ScopeTrack.Application.Interfaces
   public interface IContractService
   {
     Task StageAsync(ContractModel contract, CancellationToken ct);
-    Task<Result<ContractGetDTO>> UpdateStatusAsync(Guid id, ContractPatchDTO dto, CancellationToken ct);
-    Task<Result<DeliverableGetDTO>> AddDeliverableAsync(Guid id, DeliverablePostDTO dto, CancellationToken ct);
-    Task<Result<ContractGetDTO>> GetByIDAsync(Guid id, CancellationToken ct);
+    Task<RequestResult<ContractGetDTO>> UpdateStatusAsync(Guid id, ContractPatchDTO dto, CancellationToken ct);
+    Task<RequestResult<DeliverableGetDTO>> AddDeliverableAsync(Guid id, DeliverablePostDTO dto, CancellationToken ct);
+    Task<RequestResult<ContractGetDTO>> GetByIDAsync(Guid id, CancellationToken ct);
   }
 }

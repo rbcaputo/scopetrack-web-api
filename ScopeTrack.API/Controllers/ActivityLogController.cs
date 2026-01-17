@@ -17,10 +17,10 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<IReadOnlyList<ActivityLogGetDTO>> result =
+      RequestResult<IReadOnlyList<ActivityLogGetDTO>> RequestResult =
         await _service.GetByEntityIDAsync(entityId, ct);
 
-      return Ok(result.Value);
+      return Ok(RequestResult.Value);
     }
   }
 }

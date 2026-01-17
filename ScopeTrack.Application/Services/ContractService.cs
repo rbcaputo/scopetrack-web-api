@@ -15,17 +15,17 @@ namespace ScopeTrack.Application.Services
   ) : IContractService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IActivityLogService _activityLogService =
-      activityLogService;
-    private readonly IDeliverableService _deliverableService =
-      deliverableService;
+    private readonly IActivityLogService _activityLogService
+      = activityLogService;
+    private readonly IDeliverableService _deliverableService
+      = deliverableService;
 
     public async Task StageAsync(
       ContractModel contract,
       CancellationToken ct
     ) => await _context.Contracts.AddAsync(contract, ct);
 
-    public async Task<Result<ContractGetDTO>> UpdateStatusAsync(
+    public async Task<RequestResult<ContractGetDTO>> UpdateStatusAsync(
       Guid id,
       ContractPatchDTO dto,
       CancellationToken ct
@@ -34,7 +34,7 @@ namespace ScopeTrack.Application.Services
       ContractModel? contract = await _context.Contracts
         .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (contract is null)
-        return Result<ContractGetDTO>.Failure("Contract not found");
+        return RequestResult<ContractGetDTO>.Failure("Contract not found");
 
       if (!Enum.TryParse(dto.NewStatus, out ContractStatus newStatus))
         throw new ArgumentOutOfRangeException(
@@ -67,12 +67,12 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return Result<ContractGetDTO>.Success(
+      return RequestResult<ContractGetDTO>.Success(
         ContractMapper.ModelToGetDTO(contract)
       );
     }
 
-    public async Task<Result<DeliverableGetDTO>> AddDeliverableAsync(
+    public async Task<RequestResult<DeliverableGetDTO>> AddDeliverableAsync(
       Guid id,
       DeliverablePostDTO dto,
       CancellationToken ct
@@ -81,7 +81,7 @@ namespace ScopeTrack.Application.Services
       ContractModel? contract = await _context.Contracts
         .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (contract is null)
-        return Result<DeliverableGetDTO>.Failure("Contract not found");
+        return RequestResult<DeliverableGetDTO>.Failure("Contract not found");
 
       DeliverableModel deliverable = DeliverableMapper.PostDTOToModel(dto);
       contract.AddDeliverable(deliverable);
@@ -97,12 +97,12 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return Result<DeliverableGetDTO>.Success(
+      return RequestResult<DeliverableGetDTO>.Success(
         DeliverableMapper.ModelToGetDTO(deliverable)
       );
     }
 
-    public async Task<Result<ContractGetDTO>> GetByIDAsync(
+    public async Task<RequestResult<ContractGetDTO>> GetByIDAsync(
       Guid id,
       CancellationToken ct
     )
@@ -114,9 +114,9 @@ namespace ScopeTrack.Application.Services
         .Select(c => ContractMapper.ModelToGetDTO(c))
         .SingleOrDefaultAsync(ct);
       if (contract is null)
-        return Result<ContractGetDTO>.Failure("Contract not found");
+        return RequestResult<ContractGetDTO>.Failure("Contract not found");
 
-      return Result<ContractGetDTO>.Success(contract);
+      return RequestResult<ContractGetDTO>.Success(contract);
     }
   }
 }

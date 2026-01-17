@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
 using ScopeTrack.Application.DTOs;
 using ScopeTrack.Application.Interfaces;
@@ -7,8 +9,12 @@ namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class DeliverableController(IDeliverableService service) : ControllerBase
+  public class DeliverableController(
+    IValidator<DeliverablePatchDTO> patchValidator,
+    IDeliverableService service) : ControllerBase
   {
+    private readonly IValidator<DeliverablePatchDTO> _patchValidator
+      = patchValidator;
     private readonly IDeliverableService _service = service;
 
     [HttpPatch("{id}")]
@@ -18,11 +24,21 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<DeliverableGetDTO> result = await _service.UpdateStatusAsync(id, dto, ct);
+      ValidationResult validationResult =
+        await _patchValidator.ValidateAsync(dto, ct);
+      if (!validationResult.IsValid)
+        return BadRequest(validationResult.Errors.Select(e => new
+        {
+          field = e.PropertyName,
+          message = e.ErrorMessage
+        }));
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      RequestResult<DeliverableGetDTO> requestResult
+        = await _service.UpdateStatusAsync(id, dto, ct);
+
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
 
     [HttpGet("{id}")]
@@ -31,11 +47,12 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<DeliverableGetDTO> result = await _service.GetByIDAsync(id, ct);
+      RequestResult<DeliverableGetDTO> requestResult
+        = await _service.GetByIDAsync(id, ct);
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
   }
 }

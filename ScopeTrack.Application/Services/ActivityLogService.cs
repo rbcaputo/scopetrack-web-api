@@ -18,7 +18,7 @@ namespace ScopeTrack.Application.Services
       CancellationToken ct
     ) => await _context.ActivityLogs.AddAsync(model, ct);
 
-    public async Task<Result<IReadOnlyList<ActivityLogGetDTO>>> GetByEntityIDAsync(
+    public async Task<RequestResult<IReadOnlyList<ActivityLogGetDTO>>> GetByEntityIDAsync(
       Guid entityID,
       CancellationToken ct
     )
@@ -30,7 +30,7 @@ namespace ScopeTrack.Application.Services
         .Select(a => ActivityLogMapper.ModelToGetDTO(a))
         .ToListAsync(ct);
 
-      return Result<IReadOnlyList<ActivityLogGetDTO>>.Success(activityLogs);
+      return RequestResult<IReadOnlyList<ActivityLogGetDTO>>.Success(activityLogs);
     }
   }
 }

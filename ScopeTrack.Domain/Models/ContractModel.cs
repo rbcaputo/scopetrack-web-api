@@ -14,7 +14,8 @@ namespace ScopeTrack.Domain.Entities
     public DateTime UpdatedAt { get; private set; }
 
     private readonly List<DeliverableModel> _deliverables = [];
-    public IReadOnlyList<DeliverableModel> Deliverables => _deliverables;
+    public IReadOnlyList<DeliverableModel> Deliverables
+      => _deliverables;
 
     private ContractModel() // EF Core
     {

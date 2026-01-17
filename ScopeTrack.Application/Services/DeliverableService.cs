@@ -14,15 +14,15 @@ namespace ScopeTrack.Application.Services
   ) : IDeliverableService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IActivityLogService _activityLogService =
-      activityLogService;
+    private readonly IActivityLogService _activityLogService
+      = activityLogService;
 
     public async Task StageAsync(
       DeliverableModel model,
       CancellationToken ct
     ) => await _context.AddAsync(model, ct);
 
-    public async Task<Result<DeliverableGetDTO>> UpdateStatusAsync(
+    public async Task<RequestResult<DeliverableGetDTO>> UpdateStatusAsync(
       Guid id,
       DeliverablePatchDTO dto,
       CancellationToken ct
@@ -31,12 +31,12 @@ namespace ScopeTrack.Application.Services
       DeliverableModel? deliverable = await _context.Deliverables
         .SingleOrDefaultAsync(d => d.ID == id, ct);
       if (deliverable is null)
-        return Result<DeliverableGetDTO>.Failure("Deliverable not found");
+        return RequestResult<DeliverableGetDTO>.Failure("Deliverable not found");
 
       ContractModel? contract = await _context.Contracts
         .SingleOrDefaultAsync(c => c.ID == deliverable.ContractID, ct);
       if (contract is null)
-        return Result<DeliverableGetDTO>.Failure("Contract not found");
+        return RequestResult<DeliverableGetDTO>.Failure("Contract not found");
 
       if (!Enum.TryParse(dto.NewStatus, out DeliverableStatus newStatus))
         throw new ArgumentOutOfRangeException(
@@ -56,12 +56,12 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return Result<DeliverableGetDTO>.Success(
+      return RequestResult<DeliverableGetDTO>.Success(
         DeliverableMapper.ModelToGetDTO(deliverable)
       );
     }
 
-    public async Task<Result<DeliverableGetDTO>> GetByIDAsync(
+    public async Task<RequestResult<DeliverableGetDTO>> GetByIDAsync(
       Guid id,
       CancellationToken ct
     )
@@ -73,9 +73,9 @@ namespace ScopeTrack.Application.Services
         .Select(d => DeliverableMapper.ModelToGetDTO(d))
         .SingleOrDefaultAsync(ct);
       if (deliverable is null)
-        return Result<DeliverableGetDTO>.Failure("Deliverable not found");
+        return RequestResult<DeliverableGetDTO>.Failure("Deliverable not found");
 
-      return Result<DeliverableGetDTO>.Success(deliverable);
+      return RequestResult<DeliverableGetDTO>.Success(deliverable);
     }
   }
 }

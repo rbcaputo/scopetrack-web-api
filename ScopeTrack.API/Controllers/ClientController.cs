@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
 using ScopeTrack.Application.DTOs;
 using ScopeTrack.Application.Interfaces;
@@ -7,8 +9,20 @@ namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class ClientController(IClientService service) : ControllerBase
+  public class ClientController(
+    IValidator<ClientPostDTO> clientPostValidator,
+    IValidator<ClientPutDTO> putValidator,
+    IValidator<ContractPostDTO> contractPostValidator,
+    IClientService service
+
+  ) : ControllerBase
   {
+    private readonly IValidator<ClientPostDTO> _clientPostValidator
+      = clientPostValidator;
+    private readonly IValidator<ClientPutDTO> _putValidator
+      = putValidator;
+    private readonly IValidator<ContractPostDTO> _contractPostValidator
+      = contractPostValidator;
     private readonly IClientService _service = service;
 
     [HttpPost]
@@ -17,11 +31,21 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<ClientGetDTO> result = await _service.CreateAsync(dto, ct);
+      ValidationResult validationResult
+        = await _clientPostValidator.ValidateAsync(dto, ct);
+      if (!validationResult.IsValid)
+        return BadRequest(validationResult.Errors.Select(e => new
+        {
+          field = e.PropertyName,
+          message = e.ErrorMessage
+        }));
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : Conflict(result.Error);
+      RequestResult<ClientGetDTO> requestResult
+        = await _service.CreateAsync(dto, ct);
+
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : Conflict(requestResult.Error);
     }
 
     [HttpPut("{id}")]
@@ -31,11 +55,21 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<ClientGetDTO> result = await _service.UpdateAsync(id, dto, ct);
+      ValidationResult validationResult
+        = await _putValidator.ValidateAsync(dto, ct);
+      if (!validationResult.IsValid)
+        return BadRequest(validationResult.Errors.Select(e => new
+        {
+          field = e.PropertyName,
+          message = e.ErrorMessage
+        }));
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      RequestResult<ClientGetDTO> requestResult
+        = await _service.UpdateAsync(id, dto, ct);
+
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
 
     [HttpPatch("{id}")]
@@ -44,11 +78,12 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<ClientGetDTO> result = await _service.ToggleStatusAsync(id, ct);
+      RequestResult<ClientGetDTO> requestResult
+        = await _service.ToggleStatusAsync(id, ct);
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
 
     [HttpPost("{id}")]
@@ -58,11 +93,21 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<ContractGetDTO> result = await _service.AddContractAsync(id, dto, ct);
+      ValidationResult validationResult
+        = await _contractPostValidator.ValidateAsync(dto, ct);
+      if (!validationResult.IsValid)
+        return BadRequest(validationResult.Errors.Select(e => new
+        {
+          field = e.PropertyName,
+          message = e.ErrorMessage
+        }));
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      RequestResult<ContractGetDTO> requestResult
+        = await _service.AddContractAsync(id, dto, ct);
+
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
 
     [HttpGet("{id}")]
@@ -71,20 +116,21 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      Result<ClientGetDTO> result = await _service.GetByIDAsync(id, ct);
+      RequestResult<ClientGetDTO> requestResult
+        = await _service.GetByIDAsync(id, ct);
 
-      return result.IsSuccess
-        ? Ok(result.Value)
-        : NotFound(result.Error);
+      return requestResult.IsSuccess
+        ? Ok(requestResult.Value)
+        : NotFound(requestResult.Error);
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(CancellationToken ct)
     {
-      Result<IReadOnlyList<ClientGetDTO>> result =
+      RequestResult<IReadOnlyList<ClientGetDTO>> requestResult =
         await _service.GetAllAsync(ct);
 
-      return Ok(result.Value);
+      return Ok(requestResult.Value);
     }
   }
 }

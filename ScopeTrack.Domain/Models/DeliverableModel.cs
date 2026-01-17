@@ -26,7 +26,10 @@ namespace ScopeTrack.Domain.Entities
       DateTime? dueDate
     )
     {
-      ArgumentException.ThrowIfNullOrWhiteSpace(contractID.ToString(), nameof(contractID));
+      ArgumentException.ThrowIfNullOrWhiteSpace(
+        contractID.ToString(),
+        nameof(contractID)
+      );
       ArgumentException.ThrowIfNullOrWhiteSpace(title, nameof(title));
 
       ID = Guid.NewGuid();
@@ -39,12 +42,19 @@ namespace ScopeTrack.Domain.Entities
       UpdatedAt = DateTime.UtcNow;
     }
 
-    public void ChangeStatus(DeliverableStatus newStatus, ContractStatus contractStatus)
+    public void ChangeStatus(
+      DeliverableStatus newStatus,
+      ContractStatus contractStatus
+    )
     {
       if (contractStatus != ContractStatus.Active)
-        throw new InvalidOperationException("Cannot change deliverable status when contract is not active");
+        throw new InvalidOperationException(
+          "Cannot change deliverable status when contract is not active"
+        );
       if (!IsValidTransition(Status, newStatus))
-        throw new InvalidOperationException($"Invalid status transition from {Status} to {newStatus}");
+        throw new InvalidOperationException(
+          $"Invalid status transition from {Status} to {newStatus}"
+        );
 
       Status = newStatus;
       UpdatedAt = DateTime.UtcNow;

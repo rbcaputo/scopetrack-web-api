@@ -12,7 +12,8 @@ namespace ScopeTrack.Domain.Entities
     public DateTime UpdatedAt { get; private set; }
 
     private readonly List<ContractModel> _contracts = [];
-    public IReadOnlyList<ContractModel> Contracts => _contracts.AsReadOnly();
+    public IReadOnlyList<ContractModel> Contracts
+      => _contracts.AsReadOnly();
 
     private ClientModel() // EF Core
     {
