@@ -1,5 +1,5 @@
 # ScopeTrack
-A REST API for tracking clients, contracts, and deliverables with activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
+A REST API for tracking clients, contracts, and deliverables with automatic activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
 
 ---
 
@@ -22,7 +22,7 @@ ScopeTrack provides a complete solution for managing:
 * **Clients** – Organizations or individuals you work with
 * **Contracts** – Agreements with specific clients
 * **Deliverables** – Individual work items within contracts
-* **Activity Logs** – Automatic tracking of all entity changes
+* **Activity Logs** – Automatic tracking of all entity changes via EF Core interceptors
 
 Each entity has status management, timestamps, and hierarchical relationships that enforce business rules at the domain level.
 
@@ -33,19 +33,19 @@ This solution follows **Clean Architecture** principles with clear separation of
 ```text
 [ScopeTrack.API] → [ScopeTrack.Application] → [ScopeTrack.Domain] → [ScopeTrack.Infrastructure]
 ```
-
 | Layer | Responsibility |
 |-------|----------------|
 | API | Controllers, Validation |
 | Application | Services, DTOs, Mappers |
 | Domain | Entities, Business Rules |
-| Infrastructure | DbContext, EF Config |
+| Infrastructure | DbContext, EF Config, Interceptors |
 
 **Key Principles:**
 * Domain models contain business logic and enforce invariants
 * Application services orchestrate use cases
 * Controllers handle HTTP concerns and input validation
-* Infrastructure is isolated and replaceable
+* Infrastructure handles persistence and cross-cutting concerns
+* Activity logging is automatic via EF Core interceptors
 
 ---
 
@@ -67,7 +67,7 @@ ScopeTrack/
 │  │  ├─ ClientController.cs
 │  │  ├─ ContractController.cs
 │  │  ├─ DeliverableController.cs
-│  │  └── ActivityLogController.cs
+│  │  └─ ActivityLogController.cs
 │  ├─ Program.cs
 │  └─ appsettings.json
 │
@@ -78,14 +78,14 @@ ScopeTrack/
 │  │  ├─ DeliverablePostDTO.cs, DeliverablePatchDTO.cs, DeliverableGetDTO.cs
 │  │  └─ ActivityLogGetDTO.cs
 │  ├─ Interfaces/
-│  │  └─ IClientService.cs, IContractService.cs, etc.
+│  │  └─ IClientService.cs, IContractService.cs, IDeliverableService.cs, IActivityLogService.cs
 │  ├─ Mappers/
-│  │  └─ ClientMapper.cs, ContractMapper.cs, etc.
+│  │  └─ ClientMapper.cs, ContractMapper.cs, DeliverableMapper.cs, ActivityLogMapper.cs
 │  ├─ Services/
-│  │  └─ ClientService.cs, ContractService.cs, etc.
+│  │  └─ ClientService.cs, ContractService.cs, DeliverableService.cs, ActivityLogService.cs
 │  ├─ Validators/
-│  │  └─ ClientPostDTOValidator.cs, etc.
-│  └─ Result.cs
+│  │  └─ ClientDTOValidator.cs, ContractDTOValidator.cs, DeliverableDTOValidator.cs
+│  └─ RequestResult.cs
 │
 ├─ ScopeTrack.Domain/
 │  ├─ Entities/
@@ -108,6 +108,8 @@ ScopeTrack/
    │     ├─ ContractEntityConfig.cs
    │     ├─ DeliverableEntityConfig.cs
    │     └─ ActivityLogEntityConfig.cs
+   ├─ Interceptors/
+   |  └─ ActivityLogInterceptor.cs
    └─ Migrations/
 ```
 
@@ -118,7 +120,7 @@ ScopeTrack/
 ### Prerequisites
 * [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download)
 * [SQL Server](https://www.microsoft.com/pt-br/sql-server) or LocalDB
-* [Visual Studio 2026](https://visualstudio.microsoft.com) or [VS Code](https://code.visualstudio.com)
+* [Visual Studio 2022+](https://visualstudio.microsoft.com) or [VS Code](https://code.visualstudio.com)
 
 ### Installation
 
@@ -133,14 +135,24 @@ cd ScopeTrack
 dotnet restore
 ```
 
-3. **Update connection string** (if not using LocalDB) Edit `ScopeTrack.API/appsettings.json`:
+3. **Configure connection string
+
+Edit `ScopeTrack.API/appsettings.json` and add:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=YOUR_SERVER;Database=ScopeTrackDB;Trusted_Connection=true;"
-  }
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=ScopeTrackDB;Trusted_Connection=true;TrustServerCertificate=true;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
 }
 ```
+For non-LocalDB installations, update the connection string accordingly.
 
 4. **Create database and apply migrations**
 ```bash
@@ -153,7 +165,9 @@ dotnet ef database update --project ScopeTrack.Infrastructure --startup-project 
 dotnet run --project ScopeTrack.API
 ```
 
-6. **Access Swagger UI** Open browser to: `https://localhost:7205` (or the port shown in console output)
+6. **Access Swagger UI**
+
+Open browser to: `https://localhost:7205` (or the port shown in console output)
 
 ---
 
@@ -202,6 +216,7 @@ dotnet run --project ScopeTrack.API
 * `ID`: PK, GUID
 * `ClientID`: FK, GUID, required
 * `Title`: nvarchar(200), required
+* `Description`: nvarchar(1000)
 * `Status`: int, required
 * `CreatedAt`: datetime2, required
 * `UpdatedAt`: datetime2, required
@@ -209,8 +224,10 @@ dotnet run --project ScopeTrack.API
 ### Deliverables Table
 * `ID`: PK, GUID
 * `ContractID`: FK, GUID, required
-* `Description`: nvarchar(500), required
+* `Title`: nvarchar(200), required
+* `Description`: nvarchar(1000)
 * `Status`: int, required
+* `DueDate`: datetime2, nullable
 * `CreatedAt`: datetime2, required
 * `UpdatedAt`: datetime2, required
 
@@ -221,6 +238,10 @@ dotnet run --project ScopeTrack.API
 * `ActivityType`: int, required
 * `ActivityDescription`: nvarchar(500), required
 * `Timestamp`: datetime2, required
+
+**Indexes:**
+* `(EntityType, EntityID)` – Composite index for efficient entity queries
+* `Timestamp` – for chronological queries
 
 **Relationships:**
 * Client → Contracts (1:N, cascade delete)
@@ -236,19 +257,22 @@ Input validation is handled at the API layer using **FluentValidation.**
 * **Email:** Required, valid email format, 5-100 characters
 
 ### Contract Validation Rules
-* **Title:** Required, 5-100 characters
-* **Status:** Must be valid enum value (Draft, Active, Completed, Archived)
+* **Title:** Required, 10-200 characters
+* **Description:** Optional, max 1000 characters
+* **Type:** Required, must be `"FixedPrice"` or `"TimeBased"`
+* **Status** (for updates): Must be `"Active"`, `"Completed"`, or `"Archived"`
 
 ### Deliverable Validation Rules
-* **Description:** Required, 10-500 characters
-* **Status:** Must be valid enum value (Pending, InProgress, Completed, Cancelled)
+* **Title:** Required, 10-200 characters
+* **Description:** Optional, max 500 characters
+* **Status** (for updates): Must be `"Pending"`, `"InProgress"`, `"Completed"`, or `"Cancelled"`
 
 Validation errors return **400 Bad Request** with structured error details:
 ```json
 [
   {
     "field": "Email",
-    "message": "Client contact email must be a valid email address"
+    "message": "Client email must be a valid email address"
   }
 ]
 ```
@@ -256,26 +280,43 @@ Validation errors return **400 Bad Request** with structured error details:
 ---
 
 ## Activity Logging
-All entity changes are automatically logged to the `ActivityLogs` table.
+All entity changes are **automatically logged** to the `ActivityLogs` table via an EF Core interceptor.
 
-**Logged Activities:**
-* Client created/updated/status changed
-* Contract created/status changed
-* Deliverable created/status changed
+### How it works
+Activity logging is handled by `ActivityLogInterceptor`, which:
+1. Intercepts `SaveChanges` and `SaveChangesAsync` calls
+2. Inspects the ChangeTracker for added/modified entities
+3. Creates activity log entries for Client, Contract, and Deliverable changes
+4. Adds logs to the same transaction as the entity changes
+
+This ensures:
+* **Atomic logging:** Logs are only written if entity changes succeed
+* **No manual staging:** Services don't need to explicitly create logs
+* **Centralized logic:** All logging logic in one place
+
+### Logged Activities
+**Clients:**
+* Created: `"Client '{name}' created"`
+* Updated: `"Client '{name}' updated"`
+* Status Changed: `Client '{name}' status changed to {status}"`
+
+**Contracts:**
+* Created: `"Contract '{title}' created"`
+* Status Changed: `"Contract '{title}' status changed to {status}"`
+
+**Deliverables:**
+* Created: `"Deliverable '{title}' created"`
+* Status Changed: `"Deliverable {title} status changed to {status}"`
 
 **Activity Log Structure:**
 ```json
 {
-  "id": "guid",
   "entityType": "Client | Contract | Deliverable",
-  "entityID": "guid",
   "activityType": "Created | Updated | StatusChanged",
-  "activityDescription": "Human-readable description",
+  "description": "Human-readable description",
   "timestamp": "2026-01-17T14:30:00Z"
 }
 ```
-
-Activity logs are staged during service operations and commited atomically with the main entity changes.
 
 ---
 
@@ -291,20 +332,29 @@ dotnet ef database update --project ScopeTrack.Infrasctructure --startup-project
 ```bash
 dotnet test
 ```
+*(Note: Tests are not yet implemented)*
 
 ### Code Organization Guidelines
-1. **Domain Models** – Contain business logic, enforce invariants, never reference DTOs
-2. **Application Services** – Orchestrate use cases, use repositories, map between DTOs and models
-3. **Controllers** – Validate input, call services, return HTTP responses
+1. **Domain Models** – Contain business logic, enforce invariants, never reference DTOs or infrastructure
+2. **Application Services** – Orchestrate use cases, map between DTOs and models, no business logic
+3. **Controllers** – Validate input, call services, return appropriate HTTP responses
 4. **DTOs** – Data contracts between API and clients, validated by FluentValidation
 5. **Mappers** – Convert between DTOs and domain models
+6. **Interceptors** – Handle cross-cutting concerns like activity logging
 
 ### Business Rules
-* Clients must have unique emails (database constraint enforced)
+* Clients must have unique emails (enforced by database unique constraint)
 * Contracts can only be added to active clients
-* Deliverables can only be added to active contracts
-* Status transitions follow domain logic (e.g., can't complete an archived contract)
-* All timestamps are managed automatically
+* Deliverables can only be added to non-archived contracts
+* Contracts cannot be activated without at least one deliverable
+* Deliverable status can only be changed when contract is active
+* Status transitions follow domain-defined state machines
+* All timestamps are managed automatically by domain models
+
+### Concurrency Handling
+* Email uniqueness is enforced at the database level with a unique constraint
+* The application performs early validation checks for better UX
+* Race conditions are handled via try-catch on `DbUpdateException` with SQL error code 2601
 
 ---
 
