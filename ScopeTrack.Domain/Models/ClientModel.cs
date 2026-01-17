@@ -6,7 +6,7 @@ namespace ScopeTrack.Domain.Entities
   {
     public Guid ID { get; private set; }
     public string Name { get; private set; }
-    public string ContactEmail { get; private set; }
+    public string Email { get; private set; }
     public ClientStatus Status { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -17,35 +17,35 @@ namespace ScopeTrack.Domain.Entities
     private ClientModel() // EF Core
     {
       Name = string.Empty;
-      ContactEmail = string.Empty;
+      Email = string.Empty;
     }
 
-    public ClientModel(string name, string contactEmail)
+    public ClientModel(string name, string email)
     {
       ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
       ArgumentException.ThrowIfNullOrWhiteSpace(
-        contactEmail,
-        nameof(contactEmail)
+        email,
+        nameof(email)
       );
 
       ID = Guid.NewGuid();
       Name = name;
-      ContactEmail = contactEmail;
+      Email = email;
       Status = ClientStatus.Active;
       CreatedAt = DateTime.UtcNow;
       UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateDetails(string name, string contactEmail)
+    public void UpdateDetails(string name, string email)
     {
       ArgumentException.ThrowIfNullOrWhiteSpace(name, nameof(name));
       ArgumentException.ThrowIfNullOrWhiteSpace(
-        contactEmail,
-        nameof(contactEmail)
+        email,
+        nameof(email)
       );
 
       Name = name;
-      ContactEmail = contactEmail;
+      Email = email;
       UpdatedAt = DateTime.UtcNow;
     }
 

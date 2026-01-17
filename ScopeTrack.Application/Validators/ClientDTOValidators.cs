@@ -13,7 +13,7 @@ namespace ScopeTrack.Application.Validators
         .MaximumLength(200)
         .WithMessage("Client name must not exceed 200 characters.");
 
-      RuleFor(c => c.ContactEmail)
+      RuleFor(c => c.Email)
         .NotEmpty()
         .WithMessage("Client contact email is required")
         .EmailAddress()
@@ -33,7 +33,7 @@ namespace ScopeTrack.Application.Validators
         .MaximumLength(200)
         .WithMessage("Client name must not exceed 200 characters.");
 
-      RuleFor(c => c.ContactEmail)
+      RuleFor(c => c.Email)
         .NotEmpty()
         .WithMessage("Client contact email is required")
         .EmailAddress()

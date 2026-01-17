@@ -3,7 +3,6 @@ using ScopeTrack.Application.DTOs;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Mappers;
 using ScopeTrack.Domain.Entities;
-using ScopeTrack.Domain.Enums;
 using ScopeTrack.Infrastructure.Data;
 
 namespace ScopeTrack.Application.Services
@@ -19,15 +18,19 @@ namespace ScopeTrack.Application.Services
       CancellationToken ct
     ) => await _context.ActivityLogs.AddAsync(model, ct);
 
-    public async Task<IReadOnlyList<ActivityLogGetDTO>> GetByEntityAsync(
-      ActivityEntityType entityType,
+    public async Task<Result<IReadOnlyList<ActivityLogGetDTO>>> GetByEntityIDAsync(
       Guid entityID,
       CancellationToken ct
-    ) => await _context.ActivityLogs
-      .AsNoTracking()
-      .Where(a => a.EntityType == entityType && a.EntityID == entityID)
-      .OrderBy(a => a.OccurredAt)
-      .Select(a => ActivityLogMapper.ModelToGetDTO(a))
-      .ToListAsync(ct);
+    )
+    {
+      IReadOnlyList<ActivityLogGetDTO> activityLogs = await _context.ActivityLogs
+        .AsNoTracking()
+        .Where(a => a.EntityID == entityID)
+        .OrderBy(a => a.OccurredAt)
+        .Select(a => ActivityLogMapper.ModelToGetDTO(a))
+        .ToListAsync(ct);
+
+      return Result<IReadOnlyList<ActivityLogGetDTO>>.Success(activityLogs);
+    }
   }
 }

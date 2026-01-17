@@ -20,10 +20,17 @@ namespace ScopeTrack.Application.Services
     private readonly IContractService _contractService =
       contractService;
 
-    public async Task<ClientGetDTO> CreateAsync(ClientPostDTO dto, CancellationToken ct)
+    public async Task<Result<ClientGetDTO>> CreateAsync(
+      ClientPostDTO dto,
+      CancellationToken ct
+    )
     {
-      ClientModel client = ClientMapper.PostDTOToModel(dto);
+      bool exists = await _context.Clients
+        .AnyAsync(c => c.Name == dto.Name || c.Email == dto.Email, ct);
+      if (exists)
+        return Result<ClientGetDTO>.Failure("Client already exists");
 
+      ClientModel client = ClientMapper.PostDTOToModel(dto);
       await _context.Clients.AddAsync(client, ct);
 
       ActivityLogModel activityLog = new(
@@ -36,10 +43,12 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return ClientMapper.ModelToGetDTO(client);
+      return Result<ClientGetDTO>.Success(
+        ClientMapper.ModelToGetDTO(client)
+      );
     }
 
-    public async Task<ClientGetDTO?> UpdateAsync(
+    public async Task<Result<ClientGetDTO>> UpdateAsync(
       ClientPutDTO dto,
       CancellationToken ct
     )
@@ -47,20 +56,25 @@ namespace ScopeTrack.Application.Services
       ClientModel? client = await _context.Clients
         .SingleOrDefaultAsync(c => c.ID == dto.ID, ct);
       if (client is null)
-        return null;
+        return Result<ClientGetDTO>.Failure("Client not found");
 
-      client.UpdateDetails(dto.Name, dto.ContactEmail);
+      client.UpdateDetails(dto.Name, dto.Email);
       await _context.SaveChangesAsync(ct);
 
-      return ClientMapper.ModelToGetDTO(client);
+      return Result<ClientGetDTO>.Success(
+        ClientMapper.ModelToGetDTO(client)
+      );
     }
 
-    public async Task<ClientGetDTO?> ToggleStatusAsync(Guid id, CancellationToken ct)
+    public async Task<Result<ClientGetDTO>> ToggleStatusAsync(
+      Guid id,
+      CancellationToken ct
+    )
     {
       ClientModel? client = await _context.Clients
         .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (client is null)
-        return null;
+        return Result<ClientGetDTO>.Failure("Client not found");
 
       client.ToggleStatus();
 
@@ -74,10 +88,12 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return ClientMapper.ModelToGetDTO(client);
+      return Result<ClientGetDTO>.Success(
+        ClientMapper.ModelToGetDTO(client)
+      );
     }
 
-    public async Task<ContractGetDTO?> AddContractAsync(
+    public async Task<Result<ContractGetDTO>> AddContractAsync(
       Guid id,
       ContractPostDTO dto,
       CancellationToken ct
@@ -86,7 +102,7 @@ namespace ScopeTrack.Application.Services
       ClientModel? client = await _context.Clients
         .SingleOrDefaultAsync(c => c.ID == id, ct);
       if (client is null)
-        return null;
+        return Result<ContractGetDTO>.Failure("Client not found");
 
       ContractModel contract = ContractMapper.PostDTOToModel(dto);
       client.AddContract(contract);
@@ -102,23 +118,38 @@ namespace ScopeTrack.Application.Services
       await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
-      return ContractMapper.ModelToGetDTO(contract);
+      return Result<ContractGetDTO>.Success(
+        ContractMapper.ModelToGetDTO(contract)
+      );
     }
 
-    public async Task<ClientGetDTO?> GetByIDAsync(Guid id, CancellationToken ct)
-      => await _context.Clients
-          .Include(c => c.Contracts)
-          .AsNoTracking()
-          .Where(c => c.ID == id)
-          .Select(c => ClientMapper.ModelToGetDTO(c))
-          .SingleOrDefaultAsync(ct) ?? null;
+    public async Task<Result<ClientGetDTO>> GetByIDAsync(
+      Guid id,
+      CancellationToken ct
+    )
+    {
+      ClientGetDTO? client = await _context.Clients
+        .Include(c => c.Contracts)
+        .AsNoTracking()
+        .Where(c => c.ID == id)
+        .Select(c => ClientMapper.ModelToGetDTO(c))
+        .SingleOrDefaultAsync(ct);
+      if (client is null)
+        return Result<ClientGetDTO>.Failure("Client not found");
 
-    public async Task<IReadOnlyList<ClientGetDTO>> GetAllAsync(CancellationToken ct)
-      => await _context.Clients
-          .Include(c => c.Contracts)
-          .AsNoTracking()
-          .OrderBy(c => c.Status)
-          .Select(c => ClientMapper.ModelToGetDTO(c))
-          .ToListAsync(ct);
+      return Result<ClientGetDTO>.Success(client);
+    }
+
+    public async Task<Result<IReadOnlyList<ClientGetDTO>>> GetAllAsync(CancellationToken ct)
+    {
+      IReadOnlyList<ClientGetDTO> clients = await _context.Clients
+        .Include(c => c.Contracts)
+        .AsNoTracking()
+        .OrderBy(c => c.Status)
+        .Select(c => ClientMapper.ModelToGetDTO(c))
+        .ToListAsync(ct);
+
+      return Result<IReadOnlyList<ClientGetDTO>>.Success(clients);
+    }
   }
 }
