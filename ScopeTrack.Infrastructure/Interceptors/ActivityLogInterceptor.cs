@@ -56,21 +56,21 @@ namespace ScopeTrack.Infrastructure.Interceptors
     }
 
     private static ActivityLogModel? CreateClientActivityLog(
-      EntityEntry<ClientModel> client
+      EntityEntry<ClientModel> entry
     )
     {
-      switch (client.State)
+      switch (entry.State)
       {
         case EntityState.Added:
           return new(
             ActivityEntityType.Client,
-            client.Entity.ID,
+            entry.Entity.ID,
             ActivityType.Created,
-            $"Client '{client.Entity.Name}' created"
+            $"Client '{entry.Entity.Name}' created"
           );
         case EntityState.Modified:
           List<PropertyEntry> modified
-            = [.. client.Properties.Where(p => p.IsModified)];
+            = [.. entry.Properties.Where(p => p.IsModified)];
           if (modified.Count == 0)
             return null;
 
@@ -79,16 +79,16 @@ namespace ScopeTrack.Infrastructure.Interceptors
           ))
             return new(
               ActivityEntityType.Client,
-              client.Entity.ID,
+              entry.Entity.ID,
               ActivityType.Updated,
-              $"Client '{client.Entity.Name}' updated"
+              $"Client '{entry.Entity.Name}' updated"
             );
           else
             return new(
               ActivityEntityType.Client,
-              client.Entity.ID,
+              entry.Entity.ID,
               ActivityType.StatusChanged,
-              $"Client '{client.Entity.ID}' status changed to {client.Entity.Status}"
+              $"Client '{entry.Entity.Name}' status changed to {entry.Entity.Status}"
             );
         default:
           return null;
@@ -96,41 +96,41 @@ namespace ScopeTrack.Infrastructure.Interceptors
     }
 
     private static ActivityLogModel? CreateContractActivityLog(
-      EntityEntry<ContractModel> contract,
+      EntityEntry<ContractModel> entry,
       EntityState state
     ) => state switch
     {
       EntityState.Added => new(
         ActivityEntityType.Contract,
-        contract.Entity.ID,
+        entry.Entity.ID,
         ActivityType.Created,
-        $"Contract '{contract.Entity.Title}' created"
+        $"Contract '{entry.Entity.Title}' created"
       ),
       EntityState.Modified => new(
         ActivityEntityType.Contract,
-        contract.Entity.ID,
+        entry.Entity.ID,
         ActivityType.StatusChanged,
-        $"Contract '{contract.Entity.Title}' status changed to {contract.Entity.Status}"
+        $"Contract '{entry.Entity.Title}' status changed to {entry.Entity.Status}"
       ),
       _ => null
     };
 
     private static ActivityLogModel? CreateDeliverableActivityLog(
-      EntityEntry<DeliverableModel> deliverable,
+      EntityEntry<DeliverableModel> entry,
       EntityState state
     ) => state switch
     {
       EntityState.Added => new(
         ActivityEntityType.Deliverable,
-        deliverable.Entity.ID,
+        entry.Entity.ID,
         ActivityType.Created,
-        $"Deliverable '{deliverable.Entity.Title}' created"
+        $"Deliverable '{entry.Entity.Title}' created"
       ),
       EntityState.Modified => new(
         ActivityEntityType.Deliverable,
-        deliverable.Entity.ID,
+        entry.Entity.ID,
         ActivityType.StatusChanged,
-        $"Deliverable '{deliverable.Entity.ID}' status changed to {deliverable.Entity.Status}"
+        $"Deliverable '{entry.Entity.Title}' status changed to {entry.Entity.Status}"
       ),
       _ => null
     };
