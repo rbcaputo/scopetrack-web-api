@@ -9,7 +9,7 @@ namespace ScopeTrack.Domain.Entities
     public Guid EntityID { get; private set; }
     public ActivityType ActivityType { get; private set; }
     public string Description { get; private set; }
-    public DateTime OccurredAt { get; private set; }
+    public DateTime Timestamp { get; private set; }
 
     private ActivityLogModel() { Description = string.Empty; } // EF Core
 
@@ -28,7 +28,7 @@ namespace ScopeTrack.Domain.Entities
       EntityID = entityID;
       ActivityType = activityType;
       Description = description;
-      OccurredAt = DateTime.UtcNow;
+      Timestamp = DateTime.UtcNow;
     }
   }
 }

@@ -26,7 +26,7 @@ namespace ScopeTrack.Application.Services
       IReadOnlyList<ActivityLogGetDTO> activityLogs = await _context.ActivityLogs
         .AsNoTracking()
         .Where(a => a.EntityID == entityID)
-        .OrderBy(a => a.OccurredAt)
+        .OrderBy(a => a.Timestamp)
         .Select(a => ActivityLogMapper.ModelToGetDTO(a))
         .ToListAsync(ct);
 

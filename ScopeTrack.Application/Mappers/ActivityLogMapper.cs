@@ -10,7 +10,7 @@ namespace ScopeTrack.Application.Mappers
         model.EntityType.ToString(),
         model.ActivityType.ToString(),
         model.Description,
-        model.OccurredAt
+        model.Timestamp
       );
   }
 }

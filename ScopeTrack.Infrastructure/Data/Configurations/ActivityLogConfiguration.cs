@@ -27,11 +27,11 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
         .IsRequired()
         .HasMaxLength(500);
 
-      builder.Property(a => a.OccurredAt)
+      builder.Property(a => a.Timestamp)
         .IsRequired();
 
       builder.HasIndex(a => new { a.EntityType, a.EntityID });
-      builder.HasIndex(a => a.OccurredAt);
+      builder.HasIndex(a => a.Timestamp);
     }
   }
 }
