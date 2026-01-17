@@ -272,6 +272,7 @@ All entity changes are automatically logged to the `ActivityLogs` table.
   "activityType": "Created | Updated | StatusChanged",
   "activityDescription": "Human-readable description",
   "timestamp": "2026-01-17T14:30:00Z"
+}
 ```
 
 Activity logs are staged during service operations and commited atomically with the main entity changes.
@@ -313,8 +314,8 @@ CORS is enabled for development with an `AllowAll` policy. For production, restr
 options.AddPolicy("Production", policy =>
 {
   policy.WithOrigins("https://yourdomain.com")
-    .AllowAnyMethods()
-    .AllowAnyHeaders()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
     .AllowCredentials();
 });
 ```
