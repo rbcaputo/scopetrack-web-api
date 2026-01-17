@@ -65,7 +65,12 @@ namespace ScopeTrack.API.Controllers
         = await _service.AddDeliverableAsync(id, dto, ct);
 
       return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
+        ? CreatedAtAction(
+          nameof(GetByIDAsync),
+          "Deliverable",
+          new { id = requestResult.Value!.ID },
+          requestResult.Value
+        )
         : NotFound(requestResult.Error);
     }
 

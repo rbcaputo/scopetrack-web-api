@@ -44,7 +44,11 @@ namespace ScopeTrack.API.Controllers
         = await _service.CreateAsync(dto, ct);
 
       return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
+        ? CreatedAtAction(
+            nameof(GetByIDAsync),
+            new { id = requestResult.Value!.ID },
+            requestResult.Value
+          )
         : Conflict(requestResult.Error);
     }
 
@@ -106,7 +110,12 @@ namespace ScopeTrack.API.Controllers
         = await _service.AddContractAsync(id, dto, ct);
 
       return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
+        ? CreatedAtAction(
+          nameof(GetByIDAsync),
+          "Contract",
+          new { id = requestResult.Value!.ID },
+          requestResult.Value
+        )
         : NotFound(requestResult.Error);
     }
 
