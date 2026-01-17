@@ -20,7 +20,7 @@ namespace ScopeTrack.API.Controllers
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
       Guid id,
-      DeliverablePatchDTO dto,
+      [FromBody] DeliverablePatchDTO dto,
       CancellationToken ct
     )
     {

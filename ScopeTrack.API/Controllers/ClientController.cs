@@ -27,7 +27,7 @@ namespace ScopeTrack.API.Controllers
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
-      ClientPostDTO dto,
+      [FromBody] ClientPostDTO dto,
       CancellationToken ct
     )
     {
@@ -51,7 +51,7 @@ namespace ScopeTrack.API.Controllers
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAsync(
       Guid id,
-      ClientPutDTO dto,
+      [FromBody] ClientPutDTO dto,
       CancellationToken ct
     )
     {
@@ -86,10 +86,10 @@ namespace ScopeTrack.API.Controllers
         : NotFound(requestResult.Error);
     }
 
-    [HttpPost("{id}")]
+    [HttpPost("{id}/contracts")]
     public async Task<IActionResult> AddContractAsync(
       Guid id,
-      ContractPostDTO dto,
+      [FromBody] ContractPostDTO dto,
       CancellationToken ct
     )
     {

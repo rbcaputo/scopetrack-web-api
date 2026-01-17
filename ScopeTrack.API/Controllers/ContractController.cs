@@ -24,7 +24,7 @@ namespace ScopeTrack.API.Controllers
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
       Guid id,
-      ContractPatchDTO dto,
+      [FromBody] ContractPatchDTO dto,
       CancellationToken ct
     )
     {
@@ -45,10 +45,10 @@ namespace ScopeTrack.API.Controllers
         : NotFound(requestResult.Error);
     }
 
-    [HttpPost("{id}")]
+    [HttpPost("{id}/deliverables")]
     public async Task<IActionResult> AddDeliverableAsync(
       Guid id,
-      DeliverablePostDTO dto,
+      [FromBody] DeliverablePostDTO dto,
       CancellationToken ct
     )
     {
