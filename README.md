@@ -6,13 +6,13 @@ A REST API for tracking clients, contracts, and deliverables with activity loggi
 ## Table of Contents
 * [Overview](#overview)
 * [Architecture](#architecture)
-* [Tech Stack](#techstack)
-* [Project Structure](#projectstructure)
-* [Getting Started](#gettingstarted)
-* [API Endpoints](#apiendpoints)
-* [Database Schema](#databaseschema)
+* [Tech Stack](#tech-stack)
+* [Project Structure](#project-structure)
+* [Getting Started](#getting-started)
+* [API Endpoints](#api-endpoints)
+* [Database Schema](#database-schema)
 * [Validation](#validation)
-* [Activity Logging](#activitylogging)
+* [Activity Logging](#activity-logging)
 * [Development](#development)
 
 ---
