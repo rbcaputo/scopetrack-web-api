@@ -35,21 +35,22 @@ The project is intentionally split into two repositories:
 
 ### 3.1 Backend Repository — `ScopeTrack.API`
 ```text
-/src
-  /ScopeTack.Domain
-  /ScopeTrack.Application
-  /ScopeTrack.Infrastructure
-  /ScopeTrack.Api
+/ScopeTrack.API
+/ScopeTack.Domain
+/ScopeTrack.Application
+/ScopeTrack.Infrastructure
 
-/tests
+/Tests
   /ScopeTrack.Domain.Tests
   /ScopeTrack.Application.Tests
 
-/docs
-  architecture.md
-  api-contracts.md
+/Docs
+  ARCHITECTURE.md
+  API_CONTRACTS.md
+  IMPLEMENTATION.md
 
-ScopeTrack.sln
+README.md
+ScopeTrack.slnx
 ```
 
 ### 3.2 Frontend Repository — `ScopeTrack.UI`
@@ -71,11 +72,11 @@ angular.json
 ## 4. Technology Stack
 
 ### Backend
-* C# / .NET
+* C# / .NET 10
 * ASP.NET Core
-* Entity Framework Core
+* Entity Framework Core 10
+* FluentValidation 12
 * xUnit (tests)
-* FluentValidation
 
 ### Frontend
 * Angular
@@ -87,7 +88,7 @@ angular.json
 ### Tooling
 * Git
 * GitHub Actions (CI)
-* REST clients for manual testing
+* REST clients for manual testing (Swagger, Postman)
 
 ---
 
@@ -101,6 +102,9 @@ The backend follows Clean Architecture principles:
 * API is a thin delivery layer
 
 Dependency direction always points inward.
+```text
+API → Application → Domain ← Infrastructure
+```
 
 ---
 
@@ -111,7 +115,7 @@ Each layer has a single responsibility:
 | Domain | Business rules and invariants |
 | Application | Use cases and orchestration |
 | Infrastructure | Persistence and external services |
-| API | HTTP boundary and input/output
+| API | HTTP boundary and input/output validation
 
 No shortcuts across layers.
 
@@ -124,27 +128,30 @@ No shortcuts across layers.
 #### Client
 * Identity
 * Name
-* Contact information
-* Status
+* Contact information (email)
+* Status (Active/Inactive)
+* Collection of Contracts
 
 #### Contract
 * Belongs to a Client
-* Contract type (fixed/time-based)
+* Contract type (FixedPrice/TimeBased)
+* Status lifecycle (Draft → Active → Completed/Archived)
 * Collection of Deliverables
 
 #### Deliverable
 * Belongs to a Contract
-* Title, description, due date
-* Status lifecycle
+* Title, description, optional due date
+* Status lifecycle (Pending → InProgress → Completed)
 
 ---
 
 ### 6.2 Invariants
 Examples:
 * A contract cannot be activated without at least one deliverable
-* A deliverable cannot be completed if the contract is inactive
+* A deliverable status cannot be changed if the contract is not active
 * Status transitions must be valid and explicit
-* Activity logs are immutable
+* Contracts cannot be added to inactive clients
+* Activity logs are immutable and append-only
 
 These rules live **only** in the Domain layer.
 
@@ -155,26 +162,36 @@ These rules live **only** in the Domain layer.
 ### 7.1 Use Case Orientation
 Each operation is modeled as a use case:
 * CreateClient
-* CreateContract
-* ActivateContract
-* AddDeliverable
-* ChangeDeliverableStatus
+* UpdateClient
+* ToggleClientStatus
+* AddContractToClient
+* UpdateContractStatus
+* AddDeliverableToContract
+* UpdateDeliverableStatus
 
 Use cases:
-* receive validated input
-* load aggregates
+* receive validated input (DTOs)
+* load aggregates from persistence
 * invoke domain behavior
-* pesist changes
-* return results
+* persist changes
+* return results via `RequestResult<T>`
 
-No business logic lives in controllers.
+No business logic lives in the Application layer.
 
 ---
 
 ### 7.2 DTOs and Mapping
 * DTOs are used at boundaries only
 * Domain models are never exposed externally
-* Mapping is explicit (no magic reflection)
+* Mapping is explicit (no AutoMapper or reflection magic)
+* Each entity has dedicated mapper (ClientMapper, ContractMapper, etc.)
+
+### 7.3 Result Pattern
+The application uses `RequestResult<T>` to represent success or failure:
+* `RequestResult<T>.Success(value) – Operation succeeded
+* `RequestResult<T>.Failure(error) – Operation failed with error message
+
+This allows services to return failures without throwing exceptions for expected failures (like "Client not found").
 
 ---
 
@@ -182,14 +199,21 @@ No business logic lives in controllers.
 
 ### 8.1 Entity Framework Core
 * Code-first approach
-* Explicit entity mappings
+* Explicit entity mappings via `IEntityTypeConfiguration`
 * No lazy loading
 * Controlled navigation usage
+* Migrations tracked in Infrastructure layer
 
-### 8.2 Soft Deletion
-* Entities are never physically deleted
-* Soft delete flags preserve history
-* Queries filter deleted records by default
+### 8.2 Concurrency Handling
+* Database-level unique constraints (e.g., Client.Email)
+* Early validation checks for better UX
+* Exception handling for constraint violations
+* No optimistic concurrency tokens (yet)
+
+### 8.3 No Soft Deletion
+* Entities are physically deleted via cascade
+* Activity logs preserve historical record
+* No IsDeleted flags or query filters
 
 ---
 
@@ -205,15 +229,34 @@ It is a **historical record.**
 ### 9.1 Design Decisions
 * Append-only
 * Immutable
-* Written **only** by the Application layer
-* Domain raises *facts*, Application records *events*
+* Written **automatically** via EF Core interceptor
+* Domain models remain ignorant of logging
+* Logs are created in the same transaction as entity changes
 
-This avoids polluting domain logic with persistence concerns.
+This avoids:
+* Polluting domain logic with persistence concerns
+* Manual staging of activity logs in services
+* Inconsistent states if SaveChanges fails
 
-### 9.2 Usage Rule (Strict)
-> If a use case mutates state, it must write **exactly one** activity log entry.
+### 9.2 Implementation via Interceptor
+The `ActivityLogInterceptor` in the Infrastructure layer:
+1. Intercepts `SaveChanges` and `SaveChangesAsync` calls
+2. Inspects the ChangeTracker for added/modified entities
+3. Creates activity logs entries for Client, Contract, and Deliverable changes
+4. Adds logs to the context before the transaction commits
 
-This is enforceable in tests.
+This ensures atomic logging—logs are only written if entity changes succeed.
+
+### 9.3 What Gets Logged
+* **Client:** Created, Updated(name/email), Status Changed
+* **Contract:** Created, Status Changed
+* **Deliverable:** Created, Status Changed
+
+Each log entry includes:
+* Entity type and ID
+* Activity type (Created, Updated, StatusChanged)
+* Human-readable description
+* UTC timestamp
 
 ---
 
@@ -223,22 +266,31 @@ This is enforceable in tests.
 * Resource-oriented endpoints
 * Clear HTTP semantics
 * Predictable status codes
+* Nested routes for hierarchical relationships
 
 Example:
 ```text
-POST  /clients
-POST  /contracts/{id}/activate
-PATCH /deliverables/{id}/status
+POST  /api/client                     (Create client)
+POST  /api/client/{id}/contracts      (Add contract to client)
+PATCH /api/contract/{id}              (Update contract status)
+POST  /api/contract/{id}/deliverables (Add deliverable to contract)
+PATCH /api/deliverable/{id}           (Update deliverable status)
 ```
 
 ---
 
 ### 10.2 Validation
-* Input validation at API boundary
-* Business validation in Domain
-* Clear error responses
+* Input validation at API boundary via FluentValidation
+* Business validation in Domain models
+* Clear error responses (400 for validation, 409 for business rule violations)
 
 No silent failures.
+
+### 10.3 Response Patterns
+* **200 OK:** Success with entity data
+* **400 Bad Request:** Validation failure with structured errors
+* **404 Not Found:** Entity not found
+* **409 Conflict:** Business rule violation (e.g., duplicate email)
 
 ---
 
@@ -264,14 +316,19 @@ The UI exists to **exercise and demonstrate** the backend.
 ### Domain Tests
 * Validate invariants
 * Test status transitions
-* No mocks
+* No mocks (pure unit tests)
 
 ### Application Tests
 * Use case behavior
 * Interaction between layers
 * Infrastructure mocked where needed
 
-No UI tests.
+### Integration Tests
+* API endpoints
+* Database interactions
+* Full request/response cycle
+
+No UI tests (initially).
 
 ---
 
@@ -279,9 +336,11 @@ No UI tests.
 * Authentication / authorization
 * Billing or payments
 * Notifications
-* Integrations
+* Integrations with external systems
 * Multi-tenancy
 * AI features
+* Real-time updates (WebSockets, SignalR)
+* File uploads
 
 Excluding these is a design decision, not a limitation.
 
@@ -291,9 +350,10 @@ Excluding these is a design decision, not a limitation.
 Key principles guiding decisions:
 * Prefer clarity over cleverness
 * Favor explicit rules over implicit behavior
-* Model business constraints directly
+* Model business constraints directly in domain
 * Keep scope intentionally narrow
 * Optimize for maintainability, not novelty
+* Use framework featuress appropriately (interceptors for cross-cutting concerns)
 
 This project values **correctness and structure** over feature count.
 
@@ -301,16 +361,53 @@ This project values **correctness and structure** over feature count.
 
 ## 15. Extension Points
 The system can be extended by:
-* adding authentication
-* introducing billing modules
-* expanding reporting
-* adding integrations
+* Adding authentication (ASP.NET Core Identity or JWT)
+* Introducing billing modules
+* Expanding reporting capabilities
+* Adding integrations (webhooks, external APIs)
+* Implementing soft deletion if history preservation is needed
+* Adding optimistic concurrency if concurrent edits become an issue
 
 The are consciously deferred.
 
 ---
 
-## 16. Conclusion
+## 16. Key Architectural Decisions
+
+### 16.1 Why EF Core Interceptors for Activity Logging?
+**Problem:** Manual staging of activity logs in services leads to:
+* Code duplication across services
+* Risk of forgetting to log changes
+* Inconsistent state if SaveChanges fails after staging logs
+
+**Solution:** `ActivityLogInterceptor` automatically creates logs before SaveChanges commits.
+
+**Trade-offs:**
+* ✓ Atomic logging (all-or-nothing)
+* ✓ No manual staging needed
+* ✓ Centralized logging logic
+* ⚠ Implicit behavior (less visible than explicit calls)
+* ⚠ Coupled to EF Core (but acceptable in Infrastructure layer)
+
+### 16.2 Why Validation in Controllers?
+Input validation happens at the API boundary because:
+* It's an HTTP concern (malformed requests → 400)
+* Business validation lives in domain (rule violations → 409)
+* Keeps validation error separate from business failures
+* Makes it easy to return proper HTTP status codes
+
+### Why No Repository Pattern?
+Services directly use DbContext because:
+* EF Core DbSet already provides repository-like abstraction
+* No need for an extra layer of indirection
+* DbContext is mockable for testing if needed
+* Simplifies codebase
+
+If multiple ORMs were required, repositories would make sense.
+
+---
+
+## 17. Conclusion
 ScopeTrack is designed as:
 * a realistic backend system
 * a clear demonstration of architectural discipline
