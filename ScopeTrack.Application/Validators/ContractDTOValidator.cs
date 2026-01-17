@@ -39,8 +39,13 @@ namespace ScopeTrack.Application.Validators
       RuleFor(c => c.NewStatus)
         .NotEmpty()
         .WithMessage("Contract new status is required")
-        .Must(status => status == "Active" || status == "Completed" || status == "Archived")
-        .WithMessage("Contract new status must be either 'Active' or 'Archived'");
+        .Must(status => status == "Active"
+                     || status == "Completed"
+                     || status == "Archived"
+        )
+        .WithMessage(
+          "Contract new status must be 'Active', 'Completed', or 'Archived'"
+        );
     }
   }
 }

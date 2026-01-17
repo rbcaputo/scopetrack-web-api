@@ -5,6 +5,7 @@ using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Services;
 using ScopeTrack.Application.Validators;
 using ScopeTrack.Infrastructure.Data;
+using ScopeTrack.Infrastructure.Interceptors;
 
 namespace ScopeTrack.API
 {
@@ -14,20 +15,20 @@ namespace ScopeTrack.API
     {
       WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-      // Database configuration
+      // Database configuration with interceptor
       builder.Services.AddDbContext<ScopeTrackDbContext>(options =>
       {
         options.UseSqlServer(
           builder.Configuration.GetConnectionString("DefaultConnection"),
           sqlOptions => sqlOptions.MigrationsAssembly("ScopeTrack.Infrastructure")
         );
+        options.AddInterceptors(new ActivityLogInterceptor());
       });
 
       // Register application services
       builder.Services.AddScoped<IClientService, ClientService>();
       builder.Services.AddScoped<IContractService, ContractService>();
       builder.Services.AddScoped<IDeliverableService, DeliverableService>();
-      builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
       // CORS configuration
       builder.Services.AddCors(options =>

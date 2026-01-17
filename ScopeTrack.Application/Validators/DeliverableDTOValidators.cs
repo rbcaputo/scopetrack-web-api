@@ -28,9 +28,15 @@ namespace ScopeTrack.Application.Validators
     {
       RuleFor(d => d.NewStatus)
         .NotEmpty()
-        .WithMessage("Deliverable status is requirted")
-        .Must(status => status == "Pending" || status == "InProgress" || status == "Completed" || status == "Cancelled")
-        .WithMessage("Deliverable status must be 'Planned', 'InProgress', or 'Completed'");
+        .WithMessage("Deliverable status is required")
+        .Must(status => status == "Pending"
+                     || status == "InProgress"
+                     || status == "Completed"
+                     || status == "Cancelled"
+        )
+        .WithMessage(
+          "Deliverable status must be 'Pending', 'InProgress', 'Completed', or 'Cancelled'"
+        );
     }
   }
 }

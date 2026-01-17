@@ -8,19 +8,9 @@ using ScopeTrack.Infrastructure.Data;
 
 namespace ScopeTrack.Application.Services
 {
-  public sealed class DeliverableService(
-    ScopeTrackDbContext context,
-    IActivityLogService activityLogService
-  ) : IDeliverableService
+  public sealed class DeliverableService(ScopeTrackDbContext context) : IDeliverableService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IActivityLogService _activityLogService
-      = activityLogService;
-
-    public async Task StageAsync(
-      DeliverableModel model,
-      CancellationToken ct
-    ) => await _context.AddAsync(model, ct);
 
     public async Task<RequestResult<DeliverableGetDTO>> UpdateStatusAsync(
       Guid id,
@@ -46,14 +36,6 @@ namespace ScopeTrack.Application.Services
 
       deliverable.ChangeStatus(newStatus, contract.Status);
 
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Deliverable,
-        deliverable.ID,
-        ActivityType.StatusChanged,
-        "Deliverable status changed"
-      );
-
-      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
       return RequestResult<DeliverableGetDTO>.Success(

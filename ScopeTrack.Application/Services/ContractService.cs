@@ -8,22 +8,9 @@ using ScopeTrack.Infrastructure.Data;
 
 namespace ScopeTrack.Application.Services
 {
-  public sealed class ContractService(
-    ScopeTrackDbContext context,
-    IActivityLogService activityLogService,
-    IDeliverableService deliverableService
-  ) : IContractService
+  public sealed class ContractService(ScopeTrackDbContext context) : IContractService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IActivityLogService _activityLogService
-      = activityLogService;
-    private readonly IDeliverableService _deliverableService
-      = deliverableService;
-
-    public async Task StageAsync(
-      ContractModel contract,
-      CancellationToken ct
-    ) => await _context.Contracts.AddAsync(contract, ct);
 
     public async Task<RequestResult<ContractGetDTO>> UpdateStatusAsync(
       Guid id,
@@ -60,14 +47,6 @@ namespace ScopeTrack.Application.Services
           );
       }
 
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Contract,
-        contract.ID,
-        ActivityType.StatusChanged,
-        "Contract status changed"
-      );
-
-      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
       return RequestResult<ContractGetDTO>.Success(
@@ -89,15 +68,7 @@ namespace ScopeTrack.Application.Services
       DeliverableModel deliverable = DeliverableMapper.PostDTOToModel(dto);
       contract.AddDeliverable(deliverable);
 
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Deliverable,
-        deliverable.ID,
-        ActivityType.Created,
-        "Deliverable created"
-      );
-
-      await _deliverableService.StageAsync(deliverable, ct);
-      await _activityLogService.StageAsync(activityLog, ct);
+      await _context.Deliverables.AddAsync(deliverable, ct);
       await _context.SaveChangesAsync(ct);
 
       return RequestResult<DeliverableGetDTO>.Success(

@@ -4,22 +4,13 @@ using ScopeTrack.Application.DTOs;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Mappers;
 using ScopeTrack.Domain.Entities;
-using ScopeTrack.Domain.Enums;
 using ScopeTrack.Infrastructure.Data;
 
 namespace ScopeTrack.Application.Services
 {
-  public sealed class ClientService(
-    ScopeTrackDbContext context,
-    IActivityLogService activityLogService,
-    IContractService contractService
-  ) : IClientService
+  public sealed class ClientService(ScopeTrackDbContext context) : IClientService
   {
     private readonly ScopeTrackDbContext _context = context;
-    private readonly IActivityLogService _activityLogService
-      = activityLogService;
-    private readonly IContractService _contractService
-      = contractService;
 
     public async Task<RequestResult<ClientGetDTO>> CreateAsync(
       ClientPostDTO dto,
@@ -33,15 +24,6 @@ namespace ScopeTrack.Application.Services
 
       ClientModel client = ClientMapper.PostDTOToModel(dto);
       await _context.Clients.AddAsync(client, ct);
-
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Client,
-        client.ID,
-        ActivityType.Created,
-        "Client created"
-      );
-
-      await _activityLogService.StageAsync(activityLog, ct);
 
       try
       {
@@ -89,14 +71,6 @@ namespace ScopeTrack.Application.Services
 
       client.ToggleStatus();
 
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Client,
-        client.ID,
-        ActivityType.StatusChanged,
-        "Client status changed"
-      );
-
-      await _activityLogService.StageAsync(activityLog, ct);
       await _context.SaveChangesAsync(ct);
 
       return RequestResult<ClientGetDTO>.Success(
@@ -118,15 +92,7 @@ namespace ScopeTrack.Application.Services
       ContractModel contract = ContractMapper.PostDTOToModel(dto);
       client.AddContract(contract);
 
-      ActivityLogModel activityLog = new(
-        ActivityEntityType.Contract,
-        contract.ID,
-        ActivityType.Created,
-        "Contract created"
-      );
-
-      await _contractService.StageAsync(contract, ct);
-      await _activityLogService.StageAsync(activityLog, ct);
+      await _context.Contracts.AddAsync(contract, ct);
       await _context.SaveChangesAsync(ct);
 
       return RequestResult<ContractGetDTO>.Success(
