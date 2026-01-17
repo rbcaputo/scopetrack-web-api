@@ -10,16 +10,20 @@ namespace ScopeTrack.Application.Validators
       RuleFor(c => c.Name)
         .NotEmpty()
         .WithMessage("Client name is required")
-        .MaximumLength(200)
-        .WithMessage("Client name must not exceed 200 characters.");
+        .MinimumLength(3)
+        .WithMessage("Client name must have at least 3 characters")
+        .MaximumLength(100)
+        .WithMessage("Client name must not exceed 100 characters.");
 
       RuleFor(c => c.Email)
         .NotEmpty()
-        .WithMessage("Client contact email is required")
+        .WithMessage("Client email is required")
         .EmailAddress()
-        .WithMessage("Client contact email must be a valid email address")
-        .MaximumLength(200)
-        .WithMessage("Client contact email must not exceed 200 characters");
+        .WithMessage("Client email must be a valid email address")
+        .MinimumLength(5)
+        .WithMessage("Client email must have at least 5 characters")
+        .MaximumLength(100)
+        .WithMessage("Client email must not exceed 100 characters");
     }
   }
 
@@ -30,16 +34,20 @@ namespace ScopeTrack.Application.Validators
       RuleFor(c => c.Name)
         .NotEmpty()
         .WithMessage("Client name is required")
-        .MaximumLength(200)
-        .WithMessage("Client name must not exceed 200 characters.");
+        .MinimumLength(3)
+        .WithMessage("Client name must have at least 3 characters")
+        .MaximumLength(100)
+        .WithMessage("Client name must not exceed 100 characters.");
 
       RuleFor(c => c.Email)
         .NotEmpty()
-        .WithMessage("Client contact email is required")
+        .WithMessage("Client email is required")
         .EmailAddress()
-        .WithMessage("Client contact email must be a valid email address")
-        .MaximumLength(200)
-        .WithMessage("Client contact email must not exceed 200 characters");
+        .WithMessage("Client email must be a valid email address")
+        .MinimumLength(5)
+        .WithMessage("Client email must have at least 5 characters")
+        .MaximumLength(100)
+        .WithMessage("Client email must not exceed 100 characters");
     }
   }
 }

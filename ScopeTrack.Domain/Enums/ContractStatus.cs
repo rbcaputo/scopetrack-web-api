@@ -4,6 +4,7 @@
   {
     Draft,
     Active,
+    Completed,
     Archived
   }
 }

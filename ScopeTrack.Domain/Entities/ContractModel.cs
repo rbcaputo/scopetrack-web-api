@@ -52,6 +52,10 @@ namespace ScopeTrack.Domain.Entities
         throw new InvalidOperationException(
           "Contract is already active"
         );
+      if (Status == ContractStatus.Completed)
+        throw new InvalidOperationException(
+          "Cannot activate a completed contract"
+        );
       if (Status == ContractStatus.Archived)
         throw new InvalidOperationException(
           "Cannot activate an archived contract"
@@ -62,6 +66,21 @@ namespace ScopeTrack.Domain.Entities
         );
 
       Status = ContractStatus.Active;
+      UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Complete()
+    {
+      if (Status == ContractStatus.Completed)
+        throw new InvalidOperationException(
+          "Contract is already completed"
+        );
+      if (Status == ContractStatus.Archived)
+        throw new InvalidOperationException(
+          "Cannot complete an archived contract"
+        );
+
+      Status = ContractStatus.Completed;
       UpdatedAt = DateTime.UtcNow;
     }
 

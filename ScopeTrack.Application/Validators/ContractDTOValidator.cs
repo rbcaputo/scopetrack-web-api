@@ -14,6 +14,8 @@ namespace ScopeTrack.Application.Validators
       RuleFor(c => c.Title)
         .NotEmpty()
         .WithMessage("Contract title is required")
+        .MinimumLength(10)
+        .WithMessage("Contract title must have at least 10 characters")
         .MaximumLength(200)
         .WithMessage("Contract title must not exceed 200 characters");
 
@@ -37,7 +39,7 @@ namespace ScopeTrack.Application.Validators
       RuleFor(c => c.NewStatus)
         .NotEmpty()
         .WithMessage("Contract new status is required")
-        .Must(status => status == "Active" || status == "Archived")
+        .Must(status => status == "Active" || status == "Completed" || status == "Archived")
         .WithMessage("Contract new status must be either 'Active' or 'Archived'");
     }
   }

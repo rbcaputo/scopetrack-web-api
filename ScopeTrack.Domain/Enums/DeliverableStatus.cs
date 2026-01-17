@@ -2,8 +2,9 @@
 {
   public enum DeliverableStatus
   {
-    Planned,
+    Pending,
     InProgress,
-    Completed
+    Completed,
+    Cancelled
   }
 }

@@ -3,8 +3,7 @@
   public enum ActivityType
   {
     Created,
-    StatusChanged,
-    Activated,
-    Archived
+    Updated,
+    StatusChanged
   }
 }

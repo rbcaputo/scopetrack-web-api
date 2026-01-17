@@ -47,6 +47,9 @@ namespace ScopeTrack.Application.Services
         case ContractStatus.Active:
           contract.Activate();
           break;
+        case ContractStatus.Completed:
+          contract.Complete();
+          break;
         case ContractStatus.Archived:
           contract.Archive();
           break;

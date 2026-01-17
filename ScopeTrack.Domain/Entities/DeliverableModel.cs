@@ -36,7 +36,7 @@ namespace ScopeTrack.Domain.Entities
       ContractID = contractID;
       Title = title;
       Description = description ?? string.Empty;
-      Status = DeliverableStatus.Planned;
+      Status = DeliverableStatus.Pending;
       DueDate = dueDate;
       CreatedAt = DateTime.UtcNow;
       UpdatedAt = DateTime.UtcNow;
@@ -65,9 +65,11 @@ namespace ScopeTrack.Domain.Entities
       DeliverableStatus newStatus
     ) => (current, newStatus) switch
     {
-      (DeliverableStatus.Planned, DeliverableStatus.InProgress) => true,
+      (DeliverableStatus.Pending, DeliverableStatus.InProgress) => true,
       (DeliverableStatus.InProgress, DeliverableStatus.Completed) => true,
-      (DeliverableStatus.InProgress, DeliverableStatus.Planned) => true,
+      (DeliverableStatus.InProgress, DeliverableStatus.Pending) => true,
+      (DeliverableStatus.Completed, DeliverableStatus.Cancelled) => false,
+      (DeliverableStatus.Cancelled, DeliverableStatus.Completed) => false,
       _ => false
     };
   }
