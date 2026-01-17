@@ -29,6 +29,7 @@ namespace ScopeTrack.API
       builder.Services.AddScoped<IClientService, ClientService>();
       builder.Services.AddScoped<IContractService, ContractService>();
       builder.Services.AddScoped<IDeliverableService, DeliverableService>();
+      builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
       // CORS configuration
       builder.Services.AddCors(options =>
