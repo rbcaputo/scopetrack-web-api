@@ -117,16 +117,12 @@ namespace ScopeTrack.Application.Services
       return RequestResult<ClientGetDTO>.Success(client);
     }
 
-    public async Task<RequestResult<IReadOnlyList<ClientGetDTO>>> GetAllAsync(CancellationToken ct)
-    {
-      IReadOnlyList<ClientGetDTO> clients = await _context.Clients
-        .Include(c => c.Contracts)
-        .AsNoTracking()
-        .OrderBy(c => c.Status)
-        .Select(c => ClientMapper.ModelToGetDTO(c))
-        .ToListAsync(ct);
-
-      return RequestResult<IReadOnlyList<ClientGetDTO>>.Success(clients);
-    }
+    public async Task<IReadOnlyList<ClientGetDTO>> GetAllAsync(CancellationToken ct)
+      => await _context.Clients
+          .Include(c => c.Contracts)
+          .AsNoTracking()
+          .OrderBy(c => c.Status)
+          .Select(c => ClientMapper.ModelToGetDTO(c))
+          .ToListAsync(ct);
   }
 }

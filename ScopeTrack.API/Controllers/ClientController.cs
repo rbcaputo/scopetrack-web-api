@@ -111,10 +111,10 @@ namespace ScopeTrack.API.Controllers
 
       return requestResult.IsSuccess
         ? CreatedAtAction(
-          nameof(GetByIDAsync),
-          "Contract",
-          new { id = requestResult.Value!.ID },
-          requestResult.Value
+            nameof(GetByIDAsync),
+            "Contract",
+            new { id = requestResult.Value!.ID },
+            requestResult.Value
         )
         : NotFound(requestResult.Error);
     }
@@ -135,11 +135,6 @@ namespace ScopeTrack.API.Controllers
 
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(CancellationToken ct)
-    {
-      RequestResult<IReadOnlyList<ClientGetDTO>> requestResult
-        = await _service.GetAllAsync(ct);
-
-      return Ok(requestResult.Value);
-    }
+      => Ok(await _service.GetAllAsync(ct));
   }
 }

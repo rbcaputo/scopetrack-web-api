@@ -66,10 +66,10 @@ namespace ScopeTrack.API.Controllers
 
       return requestResult.IsSuccess
         ? CreatedAtAction(
-          nameof(GetByIDAsync),
-          "Deliverable",
-          new { id = requestResult.Value!.ID },
-          requestResult.Value
+            nameof(GetByIDAsync),
+            "Deliverable",
+            new { id = requestResult.Value!.ID },
+            requestResult.Value
         )
         : NotFound(requestResult.Error);
     }
@@ -87,5 +87,9 @@ namespace ScopeTrack.API.Controllers
         ? Ok(requestResult.Value)
         : NotFound(requestResult.Error);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync(CancellationToken ct)
+      => Ok(await _service.GetAllAsync(ct));
   }
 }

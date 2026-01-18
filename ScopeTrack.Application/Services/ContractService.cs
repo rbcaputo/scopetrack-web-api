@@ -92,5 +92,12 @@ namespace ScopeTrack.Application.Services
 
       return RequestResult<ContractGetDTO>.Success(contract);
     }
+
+    public async Task<IReadOnlyList<ContractGetDTO>> GetAllAsync(CancellationToken ct)
+      => await _context.Contracts
+          .Include(c => c.Deliverables)
+          .AsNoTracking()
+          .Select(c => ContractMapper.ModelToGetDTO(c))
+          .ToListAsync(ct);
   }
 }

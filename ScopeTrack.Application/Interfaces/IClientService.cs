@@ -9,6 +9,6 @@ namespace ScopeTrack.Application.Interfaces
     Task<RequestResult<ClientGetDTO>> ToggleStatusAsync(Guid id, CancellationToken ct);
     Task<RequestResult<ContractGetDTO>> AddContractAsync(Guid id, ContractPostDTO dto, CancellationToken ct);
     Task<RequestResult<ClientGetDTO>> GetByIDAsync(Guid id, CancellationToken ct);
-    Task<RequestResult<IReadOnlyList<ClientGetDTO>>> GetAllAsync(CancellationToken ct);
+    Task<IReadOnlyList<ClientGetDTO>> GetAllAsync(CancellationToken ct);
   }
 }
