@@ -3,4 +3,5 @@
   <Project Path="ScopeTrack.Application/ScopeTrack.Application.csproj" Id="4d7d4833-9013-4353-890c-c0ed832a685b" />
   <Project Path="ScopeTrack.Domain/ScopeTrack.Domain.csproj" />
   <Project Path="ScopeTrack.Infrastructure/ScopeTrack.Infrastructure.csproj" Id="87cf1144-44a6-4cfb-8f01-5a6d56e4d2ff" />
+  <Project Path="ScopeTrack.Tests/ScopeTrack.Tests.csproj" />
 </Solution>
