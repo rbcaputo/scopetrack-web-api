@@ -2,11 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ScopeTrack.Application.Dtos;
-using ScopeTrack.Domain.Enums;
 using ScopeTrack.Infrastructure.Data;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 
 namespace ScopeTrack.Tests.API.Controllers
@@ -75,7 +73,7 @@ namespace ScopeTrack.Tests.API.Controllers
         .Select(er => er.GetString())
         .ToList();
 
-      errors.Should().Contain("Invalid deliverable status");
+      errors.Should().Contain("Deliverable status must be 'Pending', 'InProgress', 'Completed', or 'Cancelled'");
     }
 
     [Fact]

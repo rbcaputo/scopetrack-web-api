@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
 using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
@@ -7,9 +9,14 @@ namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class DeliverableController(IDeliverableService service) : ControllerBase
+  public class DeliverableController(
+    IDeliverableService service,
+    IValidator<DeliverablePatchDto> deliverablePatchValidator
+  ) : ControllerBase
   {
     private readonly IDeliverableService _service = service;
+    private readonly IValidator<DeliverablePatchDto> _deliverablePatchValidator
+      = deliverablePatchValidator;
 
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
@@ -18,6 +25,15 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _deliverablePatchValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<DeliverableGetDto> result
         = await _service.UpdateStatusAsync(id, dto, ct);
 

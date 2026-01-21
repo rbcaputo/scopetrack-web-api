@@ -1,10 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using ScopeTrack.Application.Dtos;
-using ScopeTrack.Domain.Entities;
-using ScopeTrack.Domain.Enums;
-using ScopeTrack.Infrastructure.Data;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -73,7 +69,7 @@ namespace ScopeTrack.Tests.API.Controllers
         .Select(er => er.GetString())
         .ToList();
 
-      errors.Should().Contain("Invalid contract status");
+      errors.Should().Contain("Contract new status must be 'Active', 'Completed', or 'Archived'");
     }
 
     [Fact]
@@ -88,50 +84,37 @@ namespace ScopeTrack.Tests.API.Controllers
     [Fact]
     public async Task UpdateStatusAsync_WithValidContract_Returns200AndUpdatedContract()
     {
-      var clientDto = new ClientPostDto("Client Name", "client@email.com");
-      var clientResponse = await _client.PostAsJsonAsync("/api/client", clientDto);
+      // Create client
+      var client = await CreateClientAsync();
 
-      clientResponse.EnsureSuccessStatusCode();
+      // Create contract
+      var contract = await CreateContractAsync(client);
 
-      var client = await clientResponse.Content.ReadFromJsonAsync<ClientGetDto>();
+      // Add deliverable
+      await AddDeliverableAsync(contract);
 
-      var contractDto = new ContractPostDto("Contract Title", "Desc", "FixedPrice");
-      var contractResponse = await _client.PostAsJsonAsync(
-        $"/api/client/{client!.Id}/contracts",
-        contractDto
-      );
-
-      contractResponse.EnsureSuccessStatusCode();
-
-      var contract = await contractResponse.Content.ReadFromJsonAsync<ContractGetDto>();
-      var deliverableDto = new DeliverablePostDto("Deliverable Title", "Desc", null);
-      var deliverableResponse = await _client.PostAsJsonAsync(
-        $"/api/contract/{contract!.Id}/deliverables",
-        deliverableDto
-      );
-
-      deliverableResponse.EnsureSuccessStatusCode();
-
+      // Activate contract via PATCH
       var patchDto = new ContractPatchDto("Active");
-      var response = await _client.PatchAsJsonAsync(
-        $"/api/contract/{contract.Id}",
-        patchDto
-      );
+      var response = await _client.PatchAsJsonAsync($"/api/contract/{contract.Id}", patchDto);
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 
       var updated = await response.Content.ReadFromJsonAsync<ContractGetDto>();
 
       updated.Should().NotBeNull();
-      updated.Status.Should().Be("Active");
+      updated!.Status.Should().Be("Active");
     }
 
     [Fact]
     public async Task AddDeliverableAsync_WithInvalidDto_Returns400()
     {
+      var client = await CreateClientAsync();
+      var contract = await CreateContractAsync(client);
+
+      var invalidDto = new DeliverablePostDto("", "", DateTime.MinValue);
       var response = await _client.PostAsJsonAsync(
-        $"/api/contract/{Guid.NewGuid()}/deliverables",
-        new DeliverablePostDto("", "", DateTime.MinValue)
+        $"/api/contract/{contract.Id}/deliverables",
+        invalidDto
       );
 
       response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -185,8 +168,8 @@ namespace ScopeTrack.Tests.API.Controllers
     {
       var client = await CreateClientAsync();
 
-      await CreateContractAsync(client, new ContractPostDto("Website A", "Desc A", "FixedPrice"));
-      await CreateContractAsync(client, new ContractPostDto("Website B", "Desc B", "TimeAndMaterial"));
+      await CreateContractAsync(client, new ContractPostDto("Website A Contract", "Desc A", "FixedPrice"));
+      await CreateContractAsync(client, new ContractPostDto("Website B Contract", "Desc B", "TimeBased"));
 
       var response = await _client.GetAsync("/api/contract");
 

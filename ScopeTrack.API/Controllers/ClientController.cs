@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
 using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
@@ -7,9 +9,17 @@ namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class ClientController(IClientService service) : ControllerBase
+  public class ClientController(
+    IClientService service,
+    IValidator<ClientPostDto> clientPostValidator,
+    IValidator<ClientPutDto> clientPutValidator,
+    IValidator<ContractPostDto> contractPostValidator
+  ) : ControllerBase
   {
     private readonly IClientService _service = service;
+    private readonly IValidator<ClientPostDto> _clientPostValidator = clientPostValidator;
+    private readonly IValidator<ClientPutDto> _clientPutValidator = clientPutValidator;
+    private readonly IValidator<ContractPostDto> _contractPostValidator = contractPostValidator;
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
@@ -17,6 +27,15 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _clientPostValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<ClientGetDto> result
         = await _service.CreateAsync(dto, ct);
 
@@ -36,6 +55,15 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _clientPutValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<ClientGetDto> result
         = await _service.UpdateAsync(id, dto, ct);
 
@@ -65,6 +93,15 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _contractPostValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<ContractGetDto> result
         = await _service.AddContractAsync(id, dto, ct);
 

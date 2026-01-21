@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
 using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
@@ -7,9 +9,17 @@ namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class ContractController(IContractService service) : ControllerBase
+  public class ContractController(
+    IContractService service,
+    IValidator<ContractPatchDto> contractPatchValidator,
+    IValidator<DeliverablePostDto> deliverablePostValidator
+  ) : ControllerBase
   {
     private readonly IContractService _service = service;
+    private readonly IValidator<ContractPatchDto> _contractPatchValidator
+      = contractPatchValidator;
+    private readonly IValidator<DeliverablePostDto> _deliverablePostValidator
+      = deliverablePostValidator;
 
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
@@ -18,11 +28,17 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _contractPatchValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<ContractGetDto> result
         = await _service.UpdateStatusAsync(id, dto, ct);
-
-      if (!result.IsSuccess && result.Error == "Invalid contract status")
-        return BadRequest(new { errors = new[] { result.Error } });
 
       return result.IsSuccess
         ? Ok(result.Value)
@@ -36,6 +52,15 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      ValidationResult validation
+        = await _deliverablePostValidator.ValidateAsync(dto, ct);
+      if (!validation.IsValid)
+        return BadRequest(validation.Errors.Select(er => new
+        {
+          field = er.PropertyName,
+          message = er.ErrorMessage
+        }));
+
       RequestResult<DeliverableGetDto> result
         = await _service.AddDeliverableAsync(id, dto, ct);
 
