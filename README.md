@@ -376,7 +376,5 @@ options.AddPolicy("Production", policy =>
 ---
 
 ## License
-
----
-
-## Contact
+Open source.
+MIT License as defined in the repository [LICENSE](/LICENSE).
