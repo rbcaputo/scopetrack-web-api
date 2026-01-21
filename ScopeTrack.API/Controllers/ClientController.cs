@@ -30,11 +30,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validation
         = await _clientPostValidator.ValidateAsync(dto, ct);
       if (!validation.IsValid)
-        return BadRequest(validation.Errors.Select(er => new
+        return BadRequest(new
         {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
+          errors = validation.Errors.Select(er => er.ErrorMessage)
+        });
 
       RequestResult<ClientGetDto> result
         = await _service.CreateAsync(dto, ct);
@@ -58,11 +57,10 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validation
         = await _clientPutValidator.ValidateAsync(dto, ct);
       if (!validation.IsValid)
-        return BadRequest(validation.Errors.Select(er => new
+        return BadRequest(new
         {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
+          errors = validation.Errors.Select(er => er.ErrorMessage)
+        });
 
       RequestResult<ClientGetDto> result
         = await _service.UpdateAsync(id, dto, ct);
@@ -93,14 +91,17 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
+      RequestResult<ClientGetDto> client = await _service.GetByIdAsync(id, ct);
+      if (!client.IsSuccess)
+        return NotFound(new { error = client.Error });
+
       ValidationResult validation
         = await _contractPostValidator.ValidateAsync(dto, ct);
       if (!validation.IsValid)
-        return BadRequest(validation.Errors.Select(er => new
+        return BadRequest(new
         {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
+          errors = validation.Errors.Select(er => er.ErrorMessage)
+        });
 
       RequestResult<ContractGetDto> result
         = await _service.AddContractAsync(id, dto, ct);

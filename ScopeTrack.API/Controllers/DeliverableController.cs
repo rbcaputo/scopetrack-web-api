@@ -28,17 +28,13 @@ namespace ScopeTrack.API.Controllers
       ValidationResult validation
         = await _deliverablePatchValidator.ValidateAsync(dto, ct);
       if (!validation.IsValid)
-        return BadRequest(validation.Errors.Select(er => new
+        return BadRequest(new
         {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
+          errors = validation.Errors.Select(er => er.ErrorMessage)
+        });
 
       RequestResult<DeliverableGetDto> result
         = await _service.UpdateStatusAsync(id, dto, ct);
-
-      if (!result.IsSuccess && result.Error == "Invalid deliverable status")
-        return BadRequest(new { errors = new[] { result.Error } });
 
       return result.IsSuccess
         ? Ok(result.Value)

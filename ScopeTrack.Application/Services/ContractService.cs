@@ -19,6 +19,7 @@ namespace ScopeTrack.Application.Services
     )
     {
       ContractModel? contract = await _context.Contracts
+        .Include(c => c.Deliverables)
         .SingleOrDefaultAsync(c => c.Id == id, ct);
       if (contract is null)
         return RequestResult<ContractGetDto>.Failure("Contract not found");
