@@ -2,14 +2,14 @@
 [![Core CI](https://github.com/rbcaputo/scopetrack-web-api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rbcaputo/scopetrack-web-api/actions/workflows/ci.yml)
 [![Core Tests](https://img.shields.io/codecov/c/github/rbcaputo/scopetrack-web-api?label=Tests&logo=codecov)](https://codecov.io/gh/rbcaputo/scopetrack-web-api)
 
-ScopeTrack is a REST API for tracking clients, contracts, and deliverables with automatic activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
+ScopeTrack is a RESTful API for tracking clients, contracts, and deliverables with automatic activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
 
 ---
 
 ## Table of Contents
 * [Overview](#overview)
 * [Architecture](#architecture)
-* [Tech Stack](#tech-stack)
+* [Technology Stack](#technology-stack)
 * [Project Structure](#project-structure)
 * [Getting Started](#getting-started)
 * [API Endpoints](#api-endpoints)
@@ -52,13 +52,15 @@ This solution follows **Clean Architecture** principles with clear separation of
 
 ---
 
-## Tech Stack
+## Technology Stack
 * **.NET 10** – Framework
 * **ASP.NET Core** – Web API
 * **Entity Framework Core 10** – ORM
 * **SQL Server** – Database (LocalDB for development)
 * **FluentValidation** – Input validation
 * **Swagger/OpenAPI** – API documentation
+* **xUnit** – Testing framework
+* **FluentAssertions** – Test assertions
 
 ---
 
@@ -192,6 +194,7 @@ Open browser to: `https://localhost:7205` (or the port shown in console output)
 | `PATCH` | `/api/contract/{id}/status` | Update contract status |
 | `POST` | `/api/contract/{id}/deliverables` | Add deliverable to contract |
 | `GET` | `/api/contract/{id}` | Get contract by ID |
+| `GET` | `/api/contract/` | Get all contracts |
 
 ### Deliverables
 | Method | Endpoint | Description |
@@ -202,7 +205,6 @@ Open browser to: `https://localhost:7205` (or the port shown in console output)
 ### Activity Logs
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/activitylog` | Get all activity logs |
 | `GET` | `/api/activitylog/{entityId}` | Get logs for specific entity |
 
 ## Database Schema
@@ -272,12 +274,11 @@ Input validation is handled at the API layer using **FluentValidation.**
 
 Validation errors return **400 Bad Request** with structured error details:
 ```json
-[
-  {
-    "field": "Email",
-    "message": "Client email must be a valid email address"
-  }
-]
+{
+ "errors": [
+   "Client email must be a valid email address"
+ ]
+}
 ```
 
 ---
@@ -335,7 +336,6 @@ dotnet ef database update --project ScopeTrack.Infrasctructure --startup-project
 ```bash
 dotnet test
 ```
-*(Note: Tests are not yet implemented)*
 
 ### Code Organization Guidelines
 1. **Domain Models** – Contain business logic, enforce invariants, never reference DTOs or infrastructure
@@ -376,5 +376,5 @@ options.AddPolicy("Production", policy =>
 ---
 
 ## License
-Open source.
+Open source.\
 MIT License as defined in the repository [LICENSE](/LICENSE).
