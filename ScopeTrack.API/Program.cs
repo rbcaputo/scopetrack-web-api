@@ -16,14 +16,15 @@ namespace ScopeTrack.API
       WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
       // Database configuration with interceptor
-      builder.Services.AddDbContext<ScopeTrackDbContext>(options =>
-      {
-        options.UseSqlServer(
-          builder.Configuration.GetConnectionString("DefaultConnection"),
-          sqlOptions => sqlOptions.MigrationsAssembly("ScopeTrack.Infrastructure")
-        );
-        options.AddInterceptors(new ActivityLogInterceptor());
-      });
+      if (!builder.Environment.IsEnvironment("Test"))
+        builder.Services.AddDbContext<ScopeTrackDbContext>(options =>
+        {
+          options.UseSqlServer(
+            builder.Configuration.GetConnectionString("DefaultConnection"),
+            sqlOptions => sqlOptions.MigrationsAssembly("ScopeTrack.Infrastructure")
+          );
+          options.AddInterceptors(new ActivityLogInterceptor());
+        });
 
       // Register application services
       builder.Services.AddScoped<IClientService, ClientService>();
@@ -42,11 +43,11 @@ namespace ScopeTrack.API
         });
       });
 
-      // Controllers with FluentValidation
+      // Controllers
       builder.Services.AddControllers();
 
-      // FluentValidation - register validators
-      builder.Services.AddValidatorsFromAssemblyContaining<ClientPostDTOValidator>();
+      // FluentValidation
+      builder.Services.AddValidatorsFromAssemblyContaining<ClientPostDtoValidator>();
 
       // Swagger/OpenAPI
       builder.Services.AddEndpointsApiExplorer();

@@ -11,7 +11,7 @@ namespace ScopeTrack.Tests.Domain.Entities
     {
       var client = new ClientModel("Acme Corp", "contact@acme.com");
 
-      client.ID.Should().NotBeEmpty();
+      client.Id.Should().NotBeEmpty();
       client.Name.Should().Be("Acme Corp");
       client.Email.Should().Be("contact@acme.com");
       client.Status.Should().Be(ClientStatus.Active);
@@ -102,7 +102,7 @@ namespace ScopeTrack.Tests.Domain.Entities
     {
       var client = new ClientModel("Acme Corp", "contact@acme.com");
       var contract = new ContractModel(
-        client.ID,
+        client.Id,
         "Website Redesign",
         "Complete redesign",
         ContractType.FixedPrice
@@ -120,7 +120,7 @@ namespace ScopeTrack.Tests.Domain.Entities
       var client = new ClientModel("Acme Corp", "contact@acme.com");
       client.ToggleStatus(); // Make inactive
       var contract = new ContractModel(
-        client.ID,
+        client.Id,
         "Website Redesign",
         "Complete redesign",
         ContractType.FixedPrice
@@ -137,7 +137,7 @@ namespace ScopeTrack.Tests.Domain.Entities
     {
       var client = new ClientModel("Acme Corp", "contact@acme.com");
       var contract = new ContractModel(
-        client.ID,
+        client.Id,
         "Website Redesign",
         "Complete redesign",
         ContractType.FixedPrice

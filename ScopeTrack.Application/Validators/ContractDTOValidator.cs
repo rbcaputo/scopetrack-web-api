@@ -1,16 +1,12 @@
 ﻿using FluentValidation;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 
 namespace ScopeTrack.Application.Validators
 {
-  public sealed class ContractPostDTOValidadator : AbstractValidator<ContractPostDTO>
+  public sealed class ContractPostDtoValidadator : AbstractValidator<ContractPostDto>
   {
-    public ContractPostDTOValidadator()
+    public ContractPostDtoValidadator()
     {
-      RuleFor(c => c.ClientID)
-        .NotEmpty()
-        .WithMessage("Client ID is required");
-
       RuleFor(c => c.Title)
         .NotEmpty()
         .WithMessage("Contract title is required")
@@ -32,9 +28,9 @@ namespace ScopeTrack.Application.Validators
     }
   }
 
-  public sealed class ContractPatchDTOValidator : AbstractValidator<ContractPatchDTO>
+  public sealed class ContractPatchDtoValidator : AbstractValidator<ContractPatchDto>
   {
-    public ContractPatchDTOValidator()
+    public ContractPatchDtoValidator()
     {
       RuleFor(c => c.NewStatus)
         .NotEmpty()

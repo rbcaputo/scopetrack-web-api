@@ -10,9 +10,9 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
     {
       builder.ToTable("Contracts");
 
-      builder.HasKey(c => c.ID);
+      builder.HasKey(c => c.Id);
 
-      builder.Property(c => c.ClientID)
+      builder.Property(c => c.ClientId)
         .IsRequired();
 
       builder.Property(c => c.Title)
@@ -36,9 +36,9 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
       builder.Property(c => c.UpdatedAt)
         .IsRequired();
 
-      builder.HasMany<DeliverableModel>("_deliverables")
+      builder.HasMany(c => c.Deliverables)
         .WithOne()
-        .HasForeignKey(deliverable => deliverable.ContractID)
+        .HasForeignKey(deliverable => deliverable.ContractId)
         .OnDelete(DeleteBehavior.Cascade);
     }
   }

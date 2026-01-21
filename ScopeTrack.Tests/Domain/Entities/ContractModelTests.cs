@@ -18,8 +18,8 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
 
-      contract.ID.Should().NotBeEmpty();
-      contract.ClientID.Should().Be(_clientId);
+      contract.Id.Should().NotBeEmpty();
+      contract.ClientId.Should().Be(_clientId);
       contract.Title.Should().Be("Website Redesign");
       contract.Description.Should().Be("Complete redesign of marketing site");
       contract.Type.Should().Be(ContractType.FixedPrice);
@@ -80,13 +80,13 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
-      contract.AddDeliverable(deliverable);
 
+      contract.AddDeliverable(deliverable);
       contract.Activate();
 
       contract.Status.Should().Be(ContractStatus.Active);
@@ -101,7 +101,6 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
-
       var act = () => contract.Activate();
 
       act.Should().Throw<InvalidOperationException>()
@@ -118,11 +117,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
       contract.Activate();
 
@@ -142,11 +142,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
       contract.Activate();
       contract.Complete();
@@ -166,6 +167,7 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
+
       contract.Archive();
 
       var act = () => contract.Activate();
@@ -184,11 +186,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
       contract.Activate();
       contract.Complete();
@@ -206,11 +209,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
       contract.Activate();
       contract.Complete();
@@ -230,6 +234,7 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
+
       contract.Archive();
 
       var act = () => contract.Complete();
@@ -247,6 +252,7 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
+
       contract.Archive();
 
       contract.Status.Should().Be(ContractStatus.Archived);
@@ -262,11 +268,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
       contract.Activate();
       contract.Archive();
@@ -283,6 +290,7 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
+
       contract.Archive();
 
       var act = () => contract.Archive();
@@ -301,11 +309,12 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
 
       contract.Deliverables.Should().ContainSingle();
@@ -321,9 +330,11 @@ namespace ScopeTrack.Tests.Domain.Entities
         "Description",
         ContractType.FixedPrice
       );
+
       contract.Archive();
+
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
@@ -345,13 +356,16 @@ namespace ScopeTrack.Tests.Domain.Entities
         ContractType.FixedPrice
       );
       var originalUpdatedAt = contract.UpdatedAt;
+
       Thread.Sleep(10);
+
       var deliverable = new DeliverableModel(
-        contract.ID,
+        contract.Id,
         "Homepage Design",
         "Design homepage",
         null
       );
+
       contract.AddDeliverable(deliverable);
 
       contract.UpdatedAt.Should().BeAfter(originalUpdatedAt);
@@ -374,16 +388,32 @@ namespace ScopeTrack.Tests.Domain.Entities
       if (methodName == nameof(ContractModel.Activate))
       {
         var deliverable = new DeliverableModel(
-          contract.ID,
+          contract.Id,
+          "Homepage Design",
+          "Design Homepage",
+          null
+        );
+
+        contract.AddDeliverable(deliverable);
+      }
+
+      if (methodName == nameof(ContractModel.Complete))
+      {
+        var deliverable = new DeliverableModel(
+          contract.Id,
           "Homepage Design",
           "Design homepage",
           null
         );
+
         contract.AddDeliverable(deliverable);
+        contract.Activate();
       }
 
       var originalUpdatedAt = contract.UpdatedAt;
+
       Thread.Sleep(10);
+
       switch (methodName)
       {
         case nameof(ContractModel.Activate):

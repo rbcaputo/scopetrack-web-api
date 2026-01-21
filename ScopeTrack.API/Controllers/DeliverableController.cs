@@ -1,58 +1,46 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class DeliverableController(
-    IValidator<DeliverablePatchDTO> patchValidator,
-    IDeliverableService service) : ControllerBase
+  public class DeliverableController(IDeliverableService service) : ControllerBase
   {
-    private readonly IValidator<DeliverablePatchDTO> _patchValidator
-      = patchValidator;
     private readonly IDeliverableService _service = service;
 
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
       Guid id,
-      [FromBody] DeliverablePatchDTO dto,
+      [FromBody] DeliverablePatchDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _patchValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<DeliverableGetDTO> requestResult
+      RequestResult<DeliverableGetDto> result
         = await _service.UpdateStatusAsync(id, dto, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      if (!result.IsSuccess && result.Error == "Invalid deliverable status")
+        return BadRequest(new { errors = new[] { result.Error } });
+
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIDAsync(
+    [HttpGet("{id}", Name = "GetDeliverableById")]
+    public async Task<IActionResult> GetByIdAsync(
       Guid id,
       CancellationToken ct
     )
     {
-      RequestResult<DeliverableGetDTO> requestResult
-        = await _service.GetByIDAsync(id, ct);
+      RequestResult<DeliverableGetDto> result
+        = await _service.GetByIdAsync(id, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
   }
 }

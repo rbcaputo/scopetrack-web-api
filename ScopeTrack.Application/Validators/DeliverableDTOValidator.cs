@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 
 namespace ScopeTrack.Application.Validators
 {
-  public sealed class DeliverablePostDTOValidator : AbstractValidator<DeliverablePostDTO>
+  public sealed class DeliverablePostDtoValidator : AbstractValidator<DeliverablePostDto>
   {
-    public DeliverablePostDTOValidator()
+    public DeliverablePostDtoValidator()
     {
       RuleFor(d => d.Title)
         .NotEmpty()
@@ -22,13 +22,13 @@ namespace ScopeTrack.Application.Validators
     }
   }
 
-  public sealed class DeliverablePatchDTOValidator : AbstractValidator<DeliverablePatchDTO>
+  public sealed class DeliverablePatchDtoValidator : AbstractValidator<DeliverablePatchDto>
   {
-    public DeliverablePatchDTOValidator()
+    public DeliverablePatchDtoValidator()
     {
       RuleFor(d => d.NewStatus)
         .NotEmpty()
-        .WithMessage("Deliverable status is required")
+        .WithMessage("Deliverable new status is required")
         .Must(status => status == "Pending"
                      || status == "InProgress"
                      || status == "Completed"

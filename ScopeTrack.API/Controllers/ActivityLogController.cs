@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Domain.Enums;
 
@@ -13,7 +13,7 @@ namespace ScopeTrack.API.Controllers
       = activityLogService;
 
     [HttpGet("{entityType}/{entityId}")]
-    public async Task<IActionResult> GetByEntityIDAsync(
+    public async Task<IActionResult> GetByEntityIdAsync(
       string entityType,
       Guid entityId,
       CancellationToken ct
@@ -27,7 +27,7 @@ namespace ScopeTrack.API.Controllers
       if (!exists)
         return NotFound("Entity not found");
 
-      IReadOnlyList<ActivityLogGetDTO> result
+      IReadOnlyList<ActivityLogGetDto> result
         = await _activityLogService.GetByEntityAsync(type, entityId, ct);
 
       return Ok(result);

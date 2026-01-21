@@ -1,11 +1,11 @@
-﻿using ScopeTrack.Application.DTOs;
+﻿using ScopeTrack.Application.Dtos;
 using ScopeTrack.Domain.Enums;
 
 namespace ScopeTrack.Application.Interfaces
 {
   public interface IActivityLogService
   {
-    Task<bool> EntityExistsAsync(ActivityEntityType entityType, Guid entityID, CancellationToken ct);
-    Task<IReadOnlyList<ActivityLogGetDTO>> GetByEntityAsync(ActivityEntityType entityType, Guid entityId, CancellationToken ct);
+    Task<bool> EntityExistsAsync(ActivityEntityType entityType, Guid entityId, CancellationToken ct);
+    Task<IReadOnlyList<ActivityLogGetDto>> GetByEntityAsync(ActivityEntityType entityType, Guid entityId, CancellationToken ct);
   }
 }

@@ -1,12 +1,12 @@
-﻿using ScopeTrack.Application.DTOs;
+﻿using ScopeTrack.Application.Dtos;
 
 namespace ScopeTrack.Application.Interfaces
 {
   public interface IContractService
   {
-    Task<RequestResult<ContractGetDTO>> UpdateStatusAsync(Guid id, ContractPatchDTO dto, CancellationToken ct);
-    Task<RequestResult<DeliverableGetDTO>> AddDeliverableAsync(Guid id, DeliverablePostDTO dto, CancellationToken ct);
-    Task<RequestResult<ContractGetDTO>> GetByIDAsync(Guid id, CancellationToken ct);
-    Task<IReadOnlyList<ContractGetDTO>> GetAllAsync(CancellationToken ct);
+    Task<RequestResult<ContractGetDto>> UpdateStatusAsync(Guid id, ContractPatchDto dto, CancellationToken ct);
+    Task<RequestResult<DeliverableGetDto>> AddDeliverableAsync(Guid id, DeliverablePostDto dto, CancellationToken ct);
+    Task<RequestResult<ContractGetDto>> GetByIdAsync(Guid id, CancellationToken ct);
+    Task<IReadOnlyList<ContractGetDto>> GetAllAsync(CancellationToken ct);
   }
 }

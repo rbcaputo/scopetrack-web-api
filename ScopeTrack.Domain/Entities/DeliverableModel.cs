@@ -4,8 +4,8 @@ namespace ScopeTrack.Domain.Entities
 {
   public sealed class DeliverableModel
   {
-    public Guid ID { get; private set; }
-    public Guid ContractID { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid ContractId { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
     public DeliverableStatus Status { get; private set; }
@@ -20,20 +20,18 @@ namespace ScopeTrack.Domain.Entities
     }
 
     public DeliverableModel(
-      Guid contractID,
+      Guid contractId,
       string title,
       string? description,
       DateTime? dueDate
     )
     {
-      ArgumentException.ThrowIfNullOrWhiteSpace(
-        contractID.ToString(),
-        nameof(contractID)
-      );
+      if (contractId == Guid.Empty)
+        throw new ArgumentException("Contract id cannot be empty", nameof(contractId));
       ArgumentException.ThrowIfNullOrWhiteSpace(title, nameof(title));
 
-      ID = Guid.NewGuid();
-      ContractID = contractID;
+      Id = Guid.NewGuid();
+      ContractId = contractId;
       Title = title;
       Description = description ?? string.Empty;
       Status = DeliverableStatus.Pending;
@@ -51,6 +49,18 @@ namespace ScopeTrack.Domain.Entities
         throw new InvalidOperationException(
           "Cannot change deliverable status when contract is not active"
         );
+      if (Status == DeliverableStatus.Completed)
+        throw new InvalidOperationException(
+          "Cannot change status of a completed deliverable"
+        );
+      if (Status == DeliverableStatus.Cancelled)
+        throw new InvalidOperationException(
+          "Cannot change status of a cancelled deliverable"
+        );
+      if (Status == newStatus)
+        throw new InvalidOperationException(
+          $"Deliverable status is already {Status}"
+        );
       if (!IsValidTransition(Status, newStatus))
         throw new InvalidOperationException(
           $"Invalid status transition from {Status} to {newStatus}"
@@ -66,10 +76,11 @@ namespace ScopeTrack.Domain.Entities
     ) => (current, newStatus) switch
     {
       (DeliverableStatus.Pending, DeliverableStatus.InProgress) => true,
+      (DeliverableStatus.Pending, DeliverableStatus.Completed) => false,
+      (DeliverableStatus.Pending, DeliverableStatus.Cancelled) => true,
+      (DeliverableStatus.InProgress, DeliverableStatus.Pending) => false,
       (DeliverableStatus.InProgress, DeliverableStatus.Completed) => true,
-      (DeliverableStatus.InProgress, DeliverableStatus.Pending) => true,
-      (DeliverableStatus.Completed, DeliverableStatus.Cancelled) => false,
-      (DeliverableStatus.Cancelled, DeliverableStatus.Completed) => false,
+      (DeliverableStatus.InProgress, DeliverableStatus.Cancelled) => true,
       _ => false
     };
   }

@@ -1,19 +1,34 @@
-﻿namespace ScopeTrack.Application.DTOs
+﻿using System.Text.Json.Serialization;
+
+namespace ScopeTrack.Application.Dtos
 {
-  public sealed record DeliverablePostDTO(
-    Guid ContractID,
-    string Title,
-    string Description,
-    DateTime? DueDate
-  );
+  public sealed record DeliverablePostDto
+  {
+    public string Title { get; }
+    public string Description { get; }
+    public DateTime? DueDate { get; }
 
-  public sealed record DeliverablePatchDTO(
-    string NewStatus
-  );
+    [JsonConstructor]
+    public DeliverablePostDto(string title, string description, DateTime? dueDate)
+    {
+      Title = title;
+      Description = description;
+      DueDate = dueDate;
+    }
+  }
 
-  public sealed record DeliverableGetDTO(
-    Guid ID,
-    Guid ContractID,
+  public sealed record DeliverablePatchDto
+  {
+    public string NewStatus { get; }
+
+    [JsonConstructor]
+    public DeliverablePatchDto(string newStatus)
+      => NewStatus = newStatus;
+  }
+
+  public sealed record DeliverableGetDto(
+    Guid Id,
+    Guid ContractId,
     string Title,
     string Description,
     string Status,

@@ -1,91 +1,65 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class ContractController(
-    IValidator<ContractPatchDTO> patchValidator,
-    IValidator<DeliverablePostDTO> deliverablePostValidator,
-    IContractService service
-  ) : ControllerBase
+  public class ContractController(IContractService service) : ControllerBase
   {
-    private readonly IValidator<ContractPatchDTO> _patchValidator
-      = patchValidator;
-    private readonly IValidator<DeliverablePostDTO> _deliverablePostValidator
-      = deliverablePostValidator;
     private readonly IContractService _service = service;
 
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStatusAsync(
       Guid id,
-      [FromBody] ContractPatchDTO dto,
+      [FromBody] ContractPatchDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _patchValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<ContractGetDTO> requestResult
+      RequestResult<ContractGetDto> result
         = await _service.UpdateStatusAsync(id, dto, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      if (!result.IsSuccess && result.Error == "Invalid contract status")
+        return BadRequest(new { errors = new[] { result.Error } });
+
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
     [HttpPost("{id}/deliverables")]
     public async Task<IActionResult> AddDeliverableAsync(
       Guid id,
-      [FromBody] DeliverablePostDTO dto,
+      [FromBody] DeliverablePostDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _deliverablePostValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<DeliverableGetDTO> requestResult
+      RequestResult<DeliverableGetDto> result
         = await _service.AddDeliverableAsync(id, dto, ct);
 
-      return requestResult.IsSuccess
-        ? CreatedAtAction(
-            nameof(GetByIDAsync),
-            "Deliverable",
-            new { id = requestResult.Value!.ID },
-            requestResult.Value
+      return result.IsSuccess
+        ? CreatedAtRoute(
+            "GetDeliverableById",
+            new { id = result.Value!.Id },
+            result.Value
         )
-        : NotFound(requestResult.Error);
+        : NotFound(result.Error);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIDAsync(
+    [HttpGet("{id}", Name = "GetContractById")]
+    public async Task<IActionResult> GetByIdAsync(
       Guid id,
       CancellationToken ct
     )
     {
-      RequestResult<ContractGetDTO> requestResult
-        = await _service.GetByIDAsync(id, ct);
+      RequestResult<ContractGetDto> result
+        = await _service.GetByIdAsync(id, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
     [HttpGet]

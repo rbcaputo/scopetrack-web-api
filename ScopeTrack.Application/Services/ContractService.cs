@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Mappers;
 using ScopeTrack.Domain.Entities;
@@ -12,92 +12,94 @@ namespace ScopeTrack.Application.Services
   {
     private readonly ScopeTrackDbContext _context = context;
 
-    public async Task<RequestResult<ContractGetDTO>> UpdateStatusAsync(
+    public async Task<RequestResult<ContractGetDto>> UpdateStatusAsync(
       Guid id,
-      ContractPatchDTO dto,
+      ContractPatchDto dto,
       CancellationToken ct
     )
     {
       ContractModel? contract = await _context.Contracts
-        .SingleOrDefaultAsync(c => c.ID == id, ct);
+        .SingleOrDefaultAsync(c => c.Id == id, ct);
       if (contract is null)
-        return RequestResult<ContractGetDTO>.Failure("Contract not found");
+        return RequestResult<ContractGetDto>.Failure("Contract not found");
 
-      if (!Enum.TryParse(dto.NewStatus, out ContractStatus newStatus))
-        throw new ArgumentOutOfRangeException(
-          nameof(dto),
+      if (!Enum.TryParse(dto.NewStatus, true, out ContractStatus newStatus))
+        return RequestResult<ContractGetDto>.Failure(
           "Invalid contract status"
         );
 
-      switch (newStatus)
+      try
       {
-        case ContractStatus.Active:
-          contract.Activate();
-          break;
-        case ContractStatus.Completed:
-          contract.Complete();
-          break;
-        case ContractStatus.Archived:
-          contract.Archive();
-          break;
-        default:
-          throw new ArgumentOutOfRangeException(
-            nameof(dto),
-            "Invalid contract status"
-          );
+        switch (newStatus)
+        {
+          case ContractStatus.Active:
+            contract.Activate();
+            break;
+          case ContractStatus.Completed:
+            contract.Complete();
+            break;
+          case ContractStatus.Archived:
+            contract.Archive();
+            break;
+        }
+      }
+      catch (InvalidOperationException ex)
+      {
+        return RequestResult<ContractGetDto>.Failure(ex.Message);
       }
 
       await _context.SaveChangesAsync(ct);
 
-      return RequestResult<ContractGetDTO>.Success(
-        ContractMapper.ModelToGetDTO(contract)
+      return RequestResult<ContractGetDto>.Success(
+        ContractMapper.ModelToGetDto(contract)
       );
     }
 
-    public async Task<RequestResult<DeliverableGetDTO>> AddDeliverableAsync(
+    public async Task<RequestResult<DeliverableGetDto>> AddDeliverableAsync(
       Guid id,
-      DeliverablePostDTO dto,
+      DeliverablePostDto dto,
       CancellationToken ct
     )
     {
       ContractModel? contract = await _context.Contracts
-        .SingleOrDefaultAsync(c => c.ID == id, ct);
+        .Include(c => c.Deliverables)
+        .SingleOrDefaultAsync(c => c.Id == id, ct);
       if (contract is null)
-        return RequestResult<DeliverableGetDTO>.Failure("Contract not found");
+        return RequestResult<DeliverableGetDto>.Failure("Contract not found");
 
-      DeliverableModel deliverable = DeliverableMapper.PostDTOToModel(dto);
+      DeliverableModel deliverable = DeliverableMapper.PostDtoToModel(contract.Id, dto);
       contract.AddDeliverable(deliverable);
 
       await _context.Deliverables.AddAsync(deliverable, ct);
       await _context.SaveChangesAsync(ct);
 
-      return RequestResult<DeliverableGetDTO>.Success(
-        DeliverableMapper.ModelToGetDTO(deliverable)
+      return RequestResult<DeliverableGetDto>.Success(
+        DeliverableMapper.ModelToGetDto(deliverable)
       );
     }
 
-    public async Task<RequestResult<ContractGetDTO>> GetByIDAsync(
+    public async Task<RequestResult<ContractGetDto>> GetByIdAsync(
       Guid id,
       CancellationToken ct
     )
     {
-      ContractGetDTO? contract = await _context.Contracts
+      ContractGetDto? contract = await _context.Contracts
         .Include(c => c.Deliverables)
         .AsNoTracking()
-        .Where(c => c.ID == id)
-        .Select(c => ContractMapper.ModelToGetDTO(c))
+        .Where(c => c.Id == id)
+        .Select(c => ContractMapper.ModelToGetDto(c))
         .SingleOrDefaultAsync(ct);
       if (contract is null)
-        return RequestResult<ContractGetDTO>.Failure("Contract not found");
+        return RequestResult<ContractGetDto>.Failure("Contract not found");
 
-      return RequestResult<ContractGetDTO>.Success(contract);
+      return RequestResult<ContractGetDto>.Success(contract);
     }
 
-    public async Task<IReadOnlyList<ContractGetDTO>> GetAllAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<ContractGetDto>> GetAllAsync(CancellationToken ct)
       => await _context.Contracts
           .Include(c => c.Deliverables)
           .AsNoTracking()
-          .Select(c => ContractMapper.ModelToGetDTO(c))
+          .Select(c => ContractMapper.ModelToGetDto(c))
           .ToListAsync(ct);
   }
 }

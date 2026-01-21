@@ -1,79 +1,47 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScopeTrack.Application;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
   [Route("api/[controller]")]
   [ApiController]
-  public class ClientController(
-    IValidator<ClientPostDTO> clientPostValidator,
-    IValidator<ClientPutDTO> putValidator,
-    IValidator<ContractPostDTO> contractPostValidator,
-    IClientService service
-
-  ) : ControllerBase
+  public class ClientController(IClientService service) : ControllerBase
   {
-    private readonly IValidator<ClientPostDTO> _clientPostValidator
-      = clientPostValidator;
-    private readonly IValidator<ClientPutDTO> _putValidator
-      = putValidator;
-    private readonly IValidator<ContractPostDTO> _contractPostValidator
-      = contractPostValidator;
     private readonly IClientService _service = service;
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
-      [FromBody] ClientPostDTO dto,
+      [FromBody] ClientPostDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _clientPostValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<ClientGetDTO> requestResult
+      RequestResult<ClientGetDto> result
         = await _service.CreateAsync(dto, ct);
 
-      return requestResult.IsSuccess
-        ? CreatedAtAction(
-            nameof(GetByIDAsync),
-            new { id = requestResult.Value!.ID },
-            requestResult.Value
+      return result.IsSuccess
+        ? CreatedAtRoute(
+            "GetClientById",
+            new { id = result.Value!.Id },
+            result.Value
           )
-        : Conflict(requestResult.Error);
+        : Conflict(result.Error);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAsync(
       Guid id,
-      [FromBody] ClientPutDTO dto,
+      [FromBody] ClientPutDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _putValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<ClientGetDTO> requestResult
+      RequestResult<ClientGetDto> result
         = await _service.UpdateAsync(id, dto, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
     [HttpPatch("{id}")]
@@ -82,55 +50,45 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      RequestResult<ClientGetDTO> requestResult
+      RequestResult<ClientGetDto> result
         = await _service.ToggleStatusAsync(id, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
     [HttpPost("{id}/contracts")]
     public async Task<IActionResult> AddContractAsync(
       Guid id,
-      [FromBody] ContractPostDTO dto,
+      [FromBody] ContractPostDto dto,
       CancellationToken ct
     )
     {
-      ValidationResult validationResult
-        = await _contractPostValidator.ValidateAsync(dto, ct);
-      if (!validationResult.IsValid)
-        return BadRequest(validationResult.Errors.Select(er => new
-        {
-          field = er.PropertyName,
-          message = er.ErrorMessage
-        }));
-
-      RequestResult<ContractGetDTO> requestResult
+      RequestResult<ContractGetDto> result
         = await _service.AddContractAsync(id, dto, ct);
 
-      return requestResult.IsSuccess
-        ? CreatedAtAction(
-            nameof(GetByIDAsync),
-            "Contract",
-            new { id = requestResult.Value!.ID },
-            requestResult.Value
+      return result.IsSuccess
+        ? CreatedAtRoute(
+            "GetContractById",
+            new { id = result.Value!.Id },
+            result.Value
         )
-        : NotFound(requestResult.Error);
+        : NotFound(result.Error);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIDAsync(
+    [HttpGet("{id}", Name = "GetClientById")]
+    public async Task<IActionResult> GetByIdAsync(
       Guid id,
       CancellationToken ct
     )
     {
-      RequestResult<ClientGetDTO> requestResult
-        = await _service.GetByIDAsync(id, ct);
+      RequestResult<ClientGetDto> result
+        = await _service.GetByIdAsync(id, ct);
 
-      return requestResult.IsSuccess
-        ? Ok(requestResult.Value)
-        : NotFound(requestResult.Error);
+      return result.IsSuccess
+        ? Ok(result.Value)
+        : NotFound(result.Error);
     }
 
     [HttpGet]

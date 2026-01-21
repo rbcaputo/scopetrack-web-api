@@ -1,11 +1,11 @@
-﻿using ScopeTrack.Application.DTOs;
+﻿using ScopeTrack.Application.Dtos;
 using ScopeTrack.Domain.Entities;
 
 namespace ScopeTrack.Application.Mappers
 {
   public static class ActivityLogMapper
   {
-    public static ActivityLogGetDTO ModelToGetDTO(ActivityLogModel model)
+    public static ActivityLogGetDto ModelToGetDto(ActivityLogModel model)
       => new(
         model.EntityType.ToString(),
         model.ActivityType.ToString(),

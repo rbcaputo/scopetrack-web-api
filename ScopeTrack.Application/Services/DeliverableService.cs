@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 using ScopeTrack.Application.Interfaces;
 using ScopeTrack.Application.Mappers;
 using ScopeTrack.Domain.Entities;
@@ -12,52 +12,58 @@ namespace ScopeTrack.Application.Services
   {
     private readonly ScopeTrackDbContext _context = context;
 
-    public async Task<RequestResult<DeliverableGetDTO>> UpdateStatusAsync(
+    public async Task<RequestResult<DeliverableGetDto>> UpdateStatusAsync(
       Guid id,
-      DeliverablePatchDTO dto,
+      DeliverablePatchDto dto,
       CancellationToken ct
     )
     {
       DeliverableModel? deliverable = await _context.Deliverables
-        .SingleOrDefaultAsync(d => d.ID == id, ct);
+        .SingleOrDefaultAsync(d => d.Id == id, ct);
       if (deliverable is null)
-        return RequestResult<DeliverableGetDTO>.Failure("Deliverable not found");
+        return RequestResult<DeliverableGetDto>.Failure("Deliverable not found");
 
       ContractModel? contract = await _context.Contracts
-        .SingleOrDefaultAsync(c => c.ID == deliverable.ContractID, ct);
+        .SingleOrDefaultAsync(c => c.Id == deliverable.ContractId, ct);
       if (contract is null)
-        return RequestResult<DeliverableGetDTO>.Failure("Contract not found");
+        return RequestResult<DeliverableGetDto>.Failure("Contract not found");
 
-      if (!Enum.TryParse(dto.NewStatus, out DeliverableStatus newStatus))
-        throw new ArgumentOutOfRangeException(
-          nameof(dto),
+      if (!Enum.TryParse(dto.NewStatus, true, out DeliverableStatus newStatus))
+        return RequestResult<DeliverableGetDto>.Failure(
           "Invalid deliverable status"
         );
 
-      deliverable.ChangeStatus(newStatus, contract.Status);
+      try
+      {
+        deliverable.ChangeStatus(newStatus, contract.Status);
+      }
+      catch (InvalidOperationException ex)
+      {
+        return RequestResult<DeliverableGetDto>.Failure(ex.Message);
+      }
 
       await _context.SaveChangesAsync(ct);
 
-      return RequestResult<DeliverableGetDTO>.Success(
-        DeliverableMapper.ModelToGetDTO(deliverable)
+      return RequestResult<DeliverableGetDto>.Success(
+        DeliverableMapper.ModelToGetDto(deliverable)
       );
     }
 
-    public async Task<RequestResult<DeliverableGetDTO>> GetByIDAsync(
+    public async Task<RequestResult<DeliverableGetDto>> GetByIdAsync(
       Guid id,
       CancellationToken ct
     )
     {
-      DeliverableGetDTO? deliverable = await _context.Deliverables
+      DeliverableGetDto? deliverable = await _context.Deliverables
         .AsNoTracking()
-        .Where(d => d.ID == id)
+        .Where(d => d.Id == id)
         .OrderBy(d => d.Status)
-        .Select(d => DeliverableMapper.ModelToGetDTO(d))
+        .Select(d => DeliverableMapper.ModelToGetDto(d))
         .SingleOrDefaultAsync(ct);
       if (deliverable is null)
-        return RequestResult<DeliverableGetDTO>.Failure("Deliverable not found");
+        return RequestResult<DeliverableGetDto>.Failure("Deliverable not found");
 
-      return RequestResult<DeliverableGetDTO>.Success(deliverable);
+      return RequestResult<DeliverableGetDto>.Success(deliverable);
     }
   }
 }

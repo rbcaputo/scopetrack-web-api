@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
-using ScopeTrack.Application.DTOs;
+using ScopeTrack.Application.Dtos;
 
 namespace ScopeTrack.Application.Validators
 {
-  public sealed class ClientPostDTOValidator : AbstractValidator<ClientPostDTO>
+  public sealed class ClientPostDtoValidator : AbstractValidator<ClientPostDto>
   {
-    public ClientPostDTOValidator()
+    public ClientPostDtoValidator()
     {
       RuleFor(c => c.Name)
         .NotEmpty()
@@ -27,9 +27,9 @@ namespace ScopeTrack.Application.Validators
     }
   }
 
-  public sealed class ClientPutDTOValidator : AbstractValidator<ClientPutDTO>
+  public sealed class ClientPutDtoValidator : AbstractValidator<ClientPutDto>
   {
-    public ClientPutDTOValidator()
+    public ClientPutDtoValidator()
     {
       RuleFor(c => c.Name)
         .NotEmpty()

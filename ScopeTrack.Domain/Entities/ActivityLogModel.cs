@@ -4,9 +4,9 @@ namespace ScopeTrack.Domain.Entities
 {
   public sealed class ActivityLogModel
   {
-    public Guid ID { get; private set; }
+    public Guid Id { get; private set; }
     public ActivityEntityType EntityType { get; private set; }
-    public Guid EntityID { get; private set; }
+    public Guid EntityId { get; private set; }
     public ActivityType ActivityType { get; private set; }
     public string Description { get; private set; }
     public DateTime Timestamp { get; private set; }
@@ -15,17 +15,17 @@ namespace ScopeTrack.Domain.Entities
 
     public ActivityLogModel(
       ActivityEntityType entityType,
-      Guid entityID,
+      Guid entityId,
       ActivityType activityType,
       string description
     )
     {
-      ArgumentException.ThrowIfNullOrWhiteSpace(entityID.ToString(), nameof(entityID));
+      ArgumentException.ThrowIfNullOrWhiteSpace(entityId.ToString(), nameof(entityId));
       ArgumentException.ThrowIfNullOrWhiteSpace(description, nameof(description));
 
-      ID = Guid.NewGuid();
+      Id = Guid.NewGuid();
       EntityType = entityType;
-      EntityID = entityID;
+      EntityId = entityId;
       ActivityType = activityType;
       Description = description;
       Timestamp = DateTime.UtcNow;

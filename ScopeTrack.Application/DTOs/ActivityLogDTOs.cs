@@ -1,6 +1,6 @@
-﻿namespace ScopeTrack.Application.DTOs
+﻿namespace ScopeTrack.Application.Dtos
 {
-  public sealed record ActivityLogGetDTO(
+  public sealed record ActivityLogGetDto(
     string EntityType,
     string ActivityType,
     string Description,

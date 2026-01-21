@@ -1,22 +1,22 @@
-﻿using ScopeTrack.Application.DTOs;
+﻿using ScopeTrack.Application.Dtos;
 using ScopeTrack.Domain.Entities;
 
 namespace ScopeTrack.Application.Mappers
 {
   public static class DeliverableMapper
   {
-    public static DeliverableModel PostDTOToModel(DeliverablePostDTO dto)
+    public static DeliverableModel PostDtoToModel(Guid contractId, DeliverablePostDto dto)
       => new(
-        dto.ContractID,
+        contractId,
         dto.Title,
         dto.Description,
         dto.DueDate
       );
 
-    public static DeliverableGetDTO ModelToGetDTO(DeliverableModel model)
+    public static DeliverableGetDto ModelToGetDto(DeliverableModel model)
       => new(
-        model.ID,
-        model.ContractID,
+        model.Id,
+        model.ContractId,
         model.Title,
         model.Description,
         model.Status.ToString(),

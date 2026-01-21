@@ -4,7 +4,7 @@ namespace ScopeTrack.Domain.Entities
 {
   public sealed class ClientModel
   {
-    public Guid ID { get; private set; }
+    public Guid Id { get; private set; }
     public string Name { get; private set; }
     public string Email { get; private set; }
     public ClientStatus Status { get; private set; }
@@ -29,7 +29,7 @@ namespace ScopeTrack.Domain.Entities
         nameof(email)
       );
 
-      ID = Guid.NewGuid();
+      Id = Guid.NewGuid();
       Name = name;
       Email = email;
       Status = ClientStatus.Active;

@@ -4,8 +4,8 @@ namespace ScopeTrack.Domain.Entities
 {
   public sealed class ContractModel
   {
-    public Guid ID { get; private set; }
-    public Guid ClientID { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid ClientId { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
     public ContractType Type { get; private set; }
@@ -24,20 +24,18 @@ namespace ScopeTrack.Domain.Entities
     }
 
     public ContractModel(
-      Guid clientID,
+      Guid clientId,
       string title,
       string? description,
       ContractType type
     )
     {
-      ArgumentException.ThrowIfNullOrWhiteSpace(
-        clientID.ToString(),
-        nameof(clientID)
-      );
+      if (clientId == Guid.Empty)
+        throw new ArgumentException("Client id cannot be empty", nameof(clientId));
       ArgumentException.ThrowIfNullOrWhiteSpace(title, nameof(title));
 
-      ID = Guid.NewGuid();
-      ClientID = clientID;
+      Id = Guid.NewGuid();
+      ClientId = clientId;
       Title = title;
       Description = description ?? string.Empty;
       Type = type;
@@ -71,6 +69,10 @@ namespace ScopeTrack.Domain.Entities
 
     public void Complete()
     {
+      if (Status == ContractStatus.Draft)
+        throw new InvalidOperationException(
+          "Cannot complete a drafted contract"
+        );
       if (Status == ContractStatus.Completed)
         throw new InvalidOperationException(
           "Contract is already completed"
@@ -97,6 +99,12 @@ namespace ScopeTrack.Domain.Entities
 
     public void AddDeliverable(DeliverableModel deliverable)
     {
+      ArgumentNullException.ThrowIfNull(deliverable, nameof(deliverable));
+
+      if (Status == ContractStatus.Completed)
+        throw new InvalidOperationException(
+          "Cannot add deliverables to a completed contract"
+        );
       if (Status == ContractStatus.Archived)
         throw new InvalidOperationException(
           "Cannot add deliverables to an archived contract"

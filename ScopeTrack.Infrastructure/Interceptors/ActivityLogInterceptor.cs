@@ -64,7 +64,7 @@ namespace ScopeTrack.Infrastructure.Interceptors
         case EntityState.Added:
           return new(
             ActivityEntityType.Client,
-            entry.Entity.ID,
+            entry.Entity.Id,
             ActivityType.Created,
             $"Client '{entry.Entity.Name}' created"
           );
@@ -79,14 +79,14 @@ namespace ScopeTrack.Infrastructure.Interceptors
           ))
             return new(
               ActivityEntityType.Client,
-              entry.Entity.ID,
+              entry.Entity.Id,
               ActivityType.Updated,
               $"Client '{entry.Entity.Name}' updated"
             );
           else
             return new(
               ActivityEntityType.Client,
-              entry.Entity.ID,
+              entry.Entity.Id,
               ActivityType.StatusChanged,
               $"Client '{entry.Entity.Name}' status changed to {entry.Entity.Status}"
             );
@@ -102,13 +102,13 @@ namespace ScopeTrack.Infrastructure.Interceptors
     {
       EntityState.Added => new(
         ActivityEntityType.Contract,
-        entry.Entity.ID,
+        entry.Entity.Id,
         ActivityType.Created,
         $"Contract '{entry.Entity.Title}' created"
       ),
       EntityState.Modified => new(
         ActivityEntityType.Contract,
-        entry.Entity.ID,
+        entry.Entity.Id,
         ActivityType.StatusChanged,
         $"Contract '{entry.Entity.Title}' status changed to {entry.Entity.Status}"
       ),
@@ -122,13 +122,13 @@ namespace ScopeTrack.Infrastructure.Interceptors
     {
       EntityState.Added => new(
         ActivityEntityType.Deliverable,
-        entry.Entity.ID,
+        entry.Entity.Id,
         ActivityType.Created,
         $"Deliverable '{entry.Entity.Title}' created"
       ),
       EntityState.Modified => new(
         ActivityEntityType.Deliverable,
-        entry.Entity.ID,
+        entry.Entity.Id,
         ActivityType.StatusChanged,
         $"Deliverable '{entry.Entity.Title}' status changed to {entry.Entity.Status}"
       ),

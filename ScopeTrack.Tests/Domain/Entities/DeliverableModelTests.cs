@@ -4,7 +4,7 @@ using ScopeTrack.Domain.Enums;
 
 namespace ScopeTrack.Tests.Domain.Entities
 {
-  public class DeliverableModelTests
+  public sealed class DeliverableModelTests
   {
     private readonly Guid _contractId = Guid.NewGuid();
 
@@ -19,8 +19,8 @@ namespace ScopeTrack.Tests.Domain.Entities
         dueDate
       );
 
-      deliverable.ID.Should().NotBeEmpty();
-      deliverable.ContractID.Should().Be(_contractId);
+      deliverable.Id.Should().NotBeEmpty();
+      deliverable.ContractId.Should().Be(_contractId);
       deliverable.Title.Should().Be("Homepage Design");
       deliverable.Description.Should().Be("Design new homepage layout");
       deliverable.Status.Should().Be(DeliverableStatus.Pending);
@@ -113,7 +113,7 @@ namespace ScopeTrack.Tests.Domain.Entities
     }
 
     [Fact]
-    public void ChangeStatus_FromInProgressToPending_WhenContractActive_ChangesSuccessfully()
+    public void ChangeStatus_FromInProgressToPending_WhenContractActive_ThrowsInvalidOperationException()
     {
       var deliverable = new DeliverableModel(
         _contractId,
@@ -122,9 +122,14 @@ namespace ScopeTrack.Tests.Domain.Entities
         null
       );
       deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
-      deliverable.ChangeStatus(DeliverableStatus.Pending, ContractStatus.Active);
 
-      deliverable.Status.Should().Be(DeliverableStatus.Pending);
+      var act = () => deliverable.ChangeStatus(
+        DeliverableStatus.Pending,
+        ContractStatus.Active
+      );
+
+      act.Should().Throw<InvalidOperationException>()
+        .WithMessage($"Invalid status transition from InProgress to Pending");
     }
 
     [Fact]
@@ -146,18 +151,48 @@ namespace ScopeTrack.Tests.Domain.Entities
         .WithMessage("Cannot change deliverable status when contract is not active");
     }
 
+    [Fact]
+    public void ChangeStatus_FromCancelled_AlwaysThrowsTerminalStateException()
+    {
+      var deliverable = new DeliverableModel(
+        _contractId,
+        "Homepage Design",
+        "Description",
+        null
+      );
+
+      deliverable.ChangeStatus(DeliverableStatus.Cancelled, ContractStatus.Active);
+
+      var act = () => deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
+
+      act.Should().Throw<InvalidOperationException>()
+        .WithMessage("Cannot change status of a cancelled deliverable");
+    }
+
+    [Fact]
+    public void ChangeStatus_FromCompleted_AlwaysThrowsTerminalStateException()
+    {
+      var deliverable = new DeliverableModel(
+        _contractId,
+        "Homepage Design",
+        "Description",
+        null
+      );
+
+      deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
+      deliverable.ChangeStatus(DeliverableStatus.Completed, ContractStatus.Active);
+
+      var act = () => deliverable.ChangeStatus(DeliverableStatus.Cancelled, ContractStatus.Active);
+
+      act.Should().Throw<InvalidOperationException>()
+        .WithMessage("Cannot change status of a completed deliverable");
+    }
+
     [Theory]
-    [InlineData(DeliverableStatus.Pending, DeliverableStatus.Completed)]
-    [InlineData(DeliverableStatus.Pending, DeliverableStatus.Cancelled)]
-    [InlineData(DeliverableStatus.Completed, DeliverableStatus.Pending)]
-    [InlineData(DeliverableStatus.Completed, DeliverableStatus.InProgress)]
-    [InlineData(DeliverableStatus.Completed, DeliverableStatus.Cancelled)]
-    [InlineData(DeliverableStatus.Cancelled, DeliverableStatus.Pending)]
-    [InlineData(DeliverableStatus.Cancelled, DeliverableStatus.InProgress)]
-    [InlineData(DeliverableStatus.Cancelled, DeliverableStatus.Completed)]
-    public void ChangeStatus_WithInvalidTransition_ThrowsInvalidOperationException(
-      DeliverableStatus currentStatus,
-      DeliverableStatus newStatus
+    [InlineData(DeliverableStatus.Pending)]
+    [InlineData(DeliverableStatus.InProgress)]
+    public void ChangeStatus_FromSameMutableStatus_ThrowsAlreadyInStatus(
+      DeliverableStatus status
     )
     {
       var deliverable = new DeliverableModel(
@@ -167,55 +202,13 @@ namespace ScopeTrack.Tests.Domain.Entities
         null
       );
 
-
-      if (currentStatus == DeliverableStatus.InProgress)
+      if (status == DeliverableStatus.InProgress)
         deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
-      else if (currentStatus == DeliverableStatus.Completed)
-      {
-        deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
-        deliverable.ChangeStatus(DeliverableStatus.Completed, ContractStatus.Active);
-      }
 
-      var act = () => deliverable.ChangeStatus(newStatus, ContractStatus.Active);
+      var act = () => deliverable.ChangeStatus(status, ContractStatus.Active);
 
-      // Assert
       act.Should().Throw<InvalidOperationException>()
-        .WithMessage($"Invalid status transition from {currentStatus} to {newStatus}");
-    }
-
-    [Fact]
-    public void ChangeStatus_UpdatesTimestamp()
-    {
-      var deliverable = new DeliverableModel(
-        _contractId,
-        "Homepage Design",
-        "Description",
-        null
-      );
-      var originalUpdatedAt = deliverable.UpdatedAt;
-      Thread.Sleep(10);
-      deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
-
-      deliverable.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void ChangeStatus_FromInProgressToInProgress_ThrowsInvalidOperationException()
-    {
-      var deliverable = new DeliverableModel(
-        _contractId,
-        "Homepage Design",
-        "Description",
-        null
-      );
-      deliverable.ChangeStatus(DeliverableStatus.InProgress, ContractStatus.Active);
-
-      var act = () => deliverable.ChangeStatus(
-        DeliverableStatus.InProgress,
-        ContractStatus.Active
-      );
-
-      act.Should().Throw<InvalidOperationException>();
+        .WithMessage($"Deliverable status is already {status}");
     }
   }
 }

@@ -10,13 +10,13 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
     {
       builder.ToTable("ActivityLogs");
 
-      builder.HasKey(a => a.ID);
+      builder.HasKey(a => a.Id);
 
       builder.Property(a => a.EntityType)
         .IsRequired()
         .HasConversion<int>();
 
-      builder.Property(a => a.EntityID)
+      builder.Property(a => a.EntityId)
         .IsRequired();
 
       builder.Property(a => a.ActivityType)
@@ -30,7 +30,7 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
       builder.Property(a => a.Timestamp)
         .IsRequired();
 
-      builder.HasIndex(a => new { a.EntityType, a.EntityID });
+      builder.HasIndex(a => new { a.EntityType, a.EntityId });
       builder.HasIndex(a => a.Timestamp);
     }
   }

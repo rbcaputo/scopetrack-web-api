@@ -1,4 +1,4 @@
-﻿using ScopeTrack.Application.DTOs;
+﻿using ScopeTrack.Application.Dtos;
 using ScopeTrack.Domain.Entities;
 using ScopeTrack.Domain.Enums;
 
@@ -6,7 +6,7 @@ namespace ScopeTrack.Application.Mappers
 {
   public static class ContractMapper
   {
-    public static ContractModel PostDTOToModel(ContractPostDTO dto)
+    public static ContractModel PostDtoToModel(Guid clientId, ContractPostDto dto)
     {
       if (!Enum.TryParse(dto.Type, out ContractType type))
         throw new ArgumentException(
@@ -15,24 +15,24 @@ namespace ScopeTrack.Application.Mappers
         );
 
       return new(
-        dto.ClientID,
+        clientId,
         dto.Title,
         dto.Description,
         type
       );
     }
 
-    public static ContractGetDTO ModelToGetDTO(ContractModel model)
+    public static ContractGetDto ModelToGetDto(ContractModel model)
     {
-      IReadOnlyList<DeliverableGetDTO> deliverables = [];
+      IReadOnlyList<DeliverableGetDto> deliverables = [];
       if (model.Deliverables.Count > 0)
         deliverables = [.. model.Deliverables
-          .Select(DeliverableMapper.ModelToGetDTO)
+          .Select(DeliverableMapper.ModelToGetDto)
         ];
 
       return new(
-        model.ID,
-        model.ClientID,
+        model.Id,
+        model.ClientId,
         model.Title,
         model.Description,
         model.Type.ToString(),

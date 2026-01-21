@@ -10,10 +10,11 @@ namespace ScopeTrack.Infrastructure.Data.Configurations
     {
       builder.ToTable("Deliverables");
 
-      builder.HasKey(d => d.ID);
+      builder.HasKey(d => d.Id);
 
-      builder.Property(d => d.ContractID)
-        .IsRequired();
+      builder.Property(d => d.ContractId)
+        .IsRequired()
+        .ValueGeneratedNever();
 
       builder.Property(d => d.Title)
         .IsRequired()
