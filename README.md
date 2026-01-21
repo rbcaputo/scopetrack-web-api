@@ -1,5 +1,8 @@
 # ScopeTrack
-A REST API for tracking clients, contracts, and deliverables with automatic activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
+[![Core CI](https://github.com/rbcaputo/scopetrack-web-api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rbcaputo/scopetrack-web-api/actions/workflows/ci.yml)
+[![Core Tests](https://img.shields.io/codecov/c/github/rbcaputo/scopetrack-web-api?label=Core%20Tests&logo=codecov)](https://codecov.io/gh/rbcaputo/scopetrack-web-api)
+
+ScopeTrack is a REST API for tracking clients, contracts, and deliverables with automatic activity logging. Built with Clean Architecture principles using .NET 10 and Entity Framework Core.
 
 ---
 
