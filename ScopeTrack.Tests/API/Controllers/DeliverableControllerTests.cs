@@ -18,7 +18,7 @@ namespace ScopeTrack.Tests.API.Controllers
     private async Task<ClientGetDto> CreateClientAsync(ClientPostDto? dto = null)
     {
       dto ??= UniqueClientDto();
-      var response = await _client.PostAsJsonAsync("/api/client", dto);
+      var response = await _client.PostAsJsonAsync("/api/clients", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -31,7 +31,7 @@ namespace ScopeTrack.Tests.API.Controllers
     private async Task<ContractGetDto> CreateContractAsync(ClientGetDto client, ContractPostDto? dto = null)
     {
       dto ??= new ContractPostDto("Website Contract", "Desc", "FixedPrice");
-      var response = await _client.PostAsJsonAsync($"/api/client/{client.Id}/contracts", dto);
+      var response = await _client.PostAsJsonAsync($"/api/clients/{client.Id}/contracts", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -45,7 +45,7 @@ namespace ScopeTrack.Tests.API.Controllers
     private async Task<DeliverableGetDto> CreateDeliverableAsync(ContractGetDto contract, DeliverablePostDto? dto = null)
     {
       dto ??= new DeliverablePostDto("Spec Deliverable", "Specification", DateTime.UtcNow.AddDays(7));
-      var response = await _client.PostAsJsonAsync($"/api/contract/{contract.Id}/deliverables", dto);
+      var response = await _client.PostAsJsonAsync($"/api/contracts/{contract.Id}/deliverables", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -63,7 +63,7 @@ namespace ScopeTrack.Tests.API.Controllers
       var contract = await CreateContractAsync(client);
       var deliverable = await CreateDeliverableAsync(contract);
       var dto = new DeliverablePatchDto("InvalidStatus");
-      var response = await _client.PatchAsJsonAsync($"/api/deliverable/{deliverable.Id}", dto);
+      var response = await _client.PatchAsJsonAsync($"/api/deliverables/{deliverable.Id}", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
@@ -80,7 +80,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task UpdateStatusAsync_WhenNotFound_Returns404()
     {
       var dto = new DeliverablePatchDto("InProgress");
-      var response = await _client.PatchAsJsonAsync($"/api/deliverable/{Guid.NewGuid()}", dto);
+      var response = await _client.PatchAsJsonAsync($"/api/deliverables/{Guid.NewGuid()}", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -106,7 +106,7 @@ namespace ScopeTrack.Tests.API.Controllers
 
       var patchDto = new DeliverablePatchDto("InProgress");
       var response = await _client.PatchAsJsonAsync(
-        $"/api/deliverable/{deliverable.Id}",
+        $"/api/deliverables/{deliverable.Id}",
         patchDto
       );
 
@@ -121,7 +121,7 @@ namespace ScopeTrack.Tests.API.Controllers
     [Fact]
     public async Task GetByIdAsync_WhenNotFound_Returns404()
     {
-      var response = await _client.GetAsync($"/api/deliverable/{Guid.NewGuid()}");
+      var response = await _client.GetAsync($"/api/deliverables/{Guid.NewGuid()}");
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -132,7 +132,7 @@ namespace ScopeTrack.Tests.API.Controllers
       var client = await CreateClientAsync();
       var contract = await CreateContractAsync(client);
       var deliverable = await CreateDeliverableAsync(contract);
-      var response = await _client.GetAsync($"/api/deliverable/{deliverable.Id}");
+      var response = await _client.GetAsync($"/api/deliverables/{deliverable.Id}");
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 

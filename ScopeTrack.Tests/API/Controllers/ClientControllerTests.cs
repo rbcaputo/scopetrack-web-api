@@ -14,7 +14,7 @@ namespace ScopeTrack.Tests.API.Controllers
     private async Task<ClientGetDto> CreateClientAsync(ClientPostDto? dto = null)
     {
       dto ??= UniqueClientDto();
-      var response = await _client.PostAsJsonAsync("/api/client", dto);
+      var response = await _client.PostAsJsonAsync("/api/clients", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -29,7 +29,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task CreateAsync_WithValidDto_Returns201AndClient()
     {
       var dto = UniqueClientDto();
-      var response = await _client.PostAsJsonAsync("/api/client", dto);
+      var response = await _client.PostAsJsonAsync("/api/clients", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -44,7 +44,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task CreateAsync_WithInvalidDto_Returns400()
     {
       var dto = new ClientPostDto("", "not-an-email");
-      var response = await _client.PostAsJsonAsync("/api/client", dto);
+      var response = await _client.PostAsJsonAsync("/api/clients", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -54,9 +54,9 @@ namespace ScopeTrack.Tests.API.Controllers
     {
       var dto = UniqueClientDto();
 
-      await _client.PostAsJsonAsync("/api/client", dto);
+      await _client.PostAsJsonAsync("/api/clients", dto);
 
-      var response = await _client.PostAsJsonAsync("/api/client", dto);
+      var response = await _client.PostAsJsonAsync("/api/clients", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
@@ -65,7 +65,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task UpdateAsync_WhenNotFound_Returns404()
     {
       var dto = new ClientPutDto("New", "new@email.com");
-      var response = await _client.PutAsJsonAsync($"/api/client/{Guid.NewGuid()}", dto);
+      var response = await _client.PutAsJsonAsync($"/api/clients/{Guid.NewGuid()}", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -75,7 +75,7 @@ namespace ScopeTrack.Tests.API.Controllers
     {
       var client = await CreateClientAsync();
       var updateDto = new ClientPutDto("Updated Name", $"new_{Guid.NewGuid()}@example.com");
-      var response = await _client.PutAsJsonAsync($"/api/client/{client.Id}", updateDto);
+      var response = await _client.PutAsJsonAsync($"/api/clients/{client.Id}", updateDto);
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -89,7 +89,7 @@ namespace ScopeTrack.Tests.API.Controllers
     [Fact]
     public async Task ToggleStatusAsync_WhenNotFound_Returns404()
     {
-      var response = await _client.PatchAsync($"/api/client/{Guid.NewGuid()}", null);
+      var response = await _client.PostAsync($"/api/clients/{Guid.NewGuid()}/toggle-status", null);
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -98,7 +98,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task ToggleStatusAsync_WithValidClient_Returns200AndTogglesStatus()
     {
       var client = await CreateClientAsync();
-      var response = await _client.PatchAsync($"/api/client/{client.Id}", null);
+      var response = await _client.PostAsync($"/api/clients/{client.Id}/toggle-status", null);
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -113,7 +113,7 @@ namespace ScopeTrack.Tests.API.Controllers
     {
       var client = await CreateClientAsync();
       var invalidDto = new ContractPostDto("", "", "");
-      var response = await _client.PostAsJsonAsync($"/api/client/{client.Id}/contracts", invalidDto);
+      var response = await _client.PostAsJsonAsync($"/api/clients/{client.Id}/contracts", invalidDto);
 
       response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -122,7 +122,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task AddContractAsync_WhenClientNotFound_Returns404()
     {
       var dto = new ContractPostDto("Website", "Desc", "FixedPrice");
-      var response = await _client.PostAsJsonAsync($"/api/client/{Guid.NewGuid()}/contracts", dto);
+      var response = await _client.PostAsJsonAsync($"/api/clients/{Guid.NewGuid()}/contracts", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -132,7 +132,7 @@ namespace ScopeTrack.Tests.API.Controllers
     {
       var client = await CreateClientAsync();
       var dto = new ContractPostDto("Website Contract", "Desc", "FixedPrice");
-      var response = await _client.PostAsJsonAsync($"/api/client/{client.Id}/contracts", dto);
+      var response = await _client.PostAsJsonAsync($"/api/clients/{client.Id}/contracts", dto);
 
       response.StatusCode.Should().Be(HttpStatusCode.Created);
 
@@ -145,7 +145,7 @@ namespace ScopeTrack.Tests.API.Controllers
     [Fact]
     public async Task GetByIdAsync_WhenNotFound_Returns404()
     {
-      var response = await _client.GetAsync($"/api/client/{Guid.NewGuid()}");
+      var response = await _client.GetAsync($"/api/clients/{Guid.NewGuid()}");
 
       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -154,7 +154,7 @@ namespace ScopeTrack.Tests.API.Controllers
     public async Task GetByIdAsync_WhenFound_Returns200AndClient()
     {
       var client = await CreateClientAsync();
-      var response = await _client.GetAsync($"/api/client/{client.Id}");
+      var response = await _client.GetAsync($"/api/clients/{client.Id}");
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -170,7 +170,7 @@ namespace ScopeTrack.Tests.API.Controllers
       var c1 = await CreateClientAsync(new ClientPostDto("Abc", $"a_{Guid.NewGuid()}@example.com"));
       var c2 = await CreateClientAsync(new ClientPostDto("Bcd", $"b_{Guid.NewGuid()}@example.com"));
 
-      var response = await _client.GetAsync("/api/client");
+      var response = await _client.GetAsync("/api/clients");
 
       response.StatusCode.Should().Be(HttpStatusCode.OK);
 
