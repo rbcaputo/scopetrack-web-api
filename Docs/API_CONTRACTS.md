@@ -14,7 +14,7 @@
 ### Validation Errors (400 Bad Request)
 ```json
 {
-  "errors: [
+  "errors": [
     "Client email must be a valid email address",
     "Client name is required"
   ]
