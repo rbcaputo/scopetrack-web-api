@@ -23,10 +23,10 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore Solution
-        run: dotnet restore ScopeTrack/ScopeTrack.slnx
+        run: dotnet restore ScopeTrack.slnx
 
       - name: Build Solution
-        run: dotnet build ScopeTrack/ScopeTrack.slnx --configuration Release --no-restore
+        run: dotnet build ScopeTrack.slnx --configuration Release --no-restore
 
       - name: Run Solution tests with coverage
         run: dotnet test ScopeTrack.Tests/ScopeTrack.Tests.csproj --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
