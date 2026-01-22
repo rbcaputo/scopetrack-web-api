@@ -78,7 +78,7 @@ Client not found
 **Request:**
 ```json
 {
-  "name": Acme Corporation",
+  "name": "Acme Corporation",
   "email": "info@acme.com"
 }
 ```
@@ -294,7 +294,7 @@ Client not found
 
 **Response:**
 ```json
-json{
+{
   "id": "9c1d2e3f-4a5b-6c7d-8e9f-0a1b2c3d4e5f",
   "contractId": "7b2a1c8d-3e4f-5a6b-7c8d-9e0f1a2b3c4d",
   "title": "Homepage Design",
