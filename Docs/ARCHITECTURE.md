@@ -223,7 +223,7 @@ No business logic lives in the Application layer.
 * Mapping is explicit via static mapper classes
 * Each entity has dedicated mapper (ClientMapper, ContractMapper, etc.)
 
-**No AutoMapper** — Manula mapping for clarity and control.
+**No AutoMapper** — Manual mapping for clarity and control.
 
 ### 7.3 Result Pattern
 The application uses `RequestResult<T>` to represent success or failure:
