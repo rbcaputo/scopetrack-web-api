@@ -7,8 +7,8 @@ using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
-  [Route("api/[controller]")]
   [ApiController]
+  [Route("api/clients")]
   public class ClientController(
     IClientService service,
     IValidator<ClientPostDto> clientPostValidator,
@@ -70,7 +70,7 @@ namespace ScopeTrack.API.Controllers
         : NotFound(result.Error);
     }
 
-    [HttpPatch("{id}")]
+    [HttpPost("{id}/toggle-status")]
     public async Task<IActionResult> ToggleStatusAsync(
       Guid id,
       CancellationToken ct

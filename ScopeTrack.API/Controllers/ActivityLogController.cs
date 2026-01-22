@@ -5,8 +5,8 @@ using ScopeTrack.Domain.Enums;
 
 namespace ScopeTrack.API.Controllers
 {
-  [Route("api/[controller]")]
   [ApiController]
+  [Route("api/activity-logs")]
   public class ActivityLogController(IActivityLogService activityLogService) : ControllerBase
   {
     private readonly IActivityLogService _activityLogService
@@ -19,7 +19,7 @@ namespace ScopeTrack.API.Controllers
       CancellationToken ct
     )
     {
-      if (!Enum.TryParse(entityType, out ActivityEntityType type))
+      if (!TryMapEntityType(entityType, out ActivityEntityType type))
         return BadRequest("Invalid entity type");
 
       bool exists
@@ -31,6 +31,22 @@ namespace ScopeTrack.API.Controllers
         = await _activityLogService.GetByEntityAsync(type, entityId, ct);
 
       return Ok(result);
+    }
+
+    private static bool TryMapEntityType(
+      string value,
+      out ActivityEntityType entityType
+    )
+    {
+      entityType = value.ToLowerInvariant() switch
+      {
+        "client" => ActivityEntityType.Client,
+        "contract" => ActivityEntityType.Contract,
+        "deliverable" => ActivityEntityType.Deliverable,
+        _ => default
+      };
+
+      return entityType != default;
     }
   }
 }

@@ -7,8 +7,8 @@ using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
-  [Route("api/[controller]")]
   [ApiController]
+  [Route("api/contracts")]
   public class ContractController(
     IContractService service,
     IValidator<ContractPatchDto> contractPatchValidator,

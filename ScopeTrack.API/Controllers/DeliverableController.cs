@@ -7,8 +7,8 @@ using ScopeTrack.Application.Interfaces;
 
 namespace ScopeTrack.API.Controllers
 {
-  [Route("api/[controller]")]
   [ApiController]
+  [Route("api/deliverables")]
   public class DeliverableController(
     IDeliverableService service,
     IValidator<DeliverablePatchDto> deliverablePatchValidator

@@ -24,7 +24,7 @@ namespace ScopeTrack.Application.Services
         ActivityEntityType.Contract
           => await _context.Contracts.AnyAsync(c => c.Id == entityId, ct),
         ActivityEntityType.Deliverable
-          => await _context.Contracts.AnyAsync(d => d.Id == entityId, ct),
+          => await _context.Deliverables.AnyAsync(d => d.Id == entityId, ct),
         _ => false
       };
     }
