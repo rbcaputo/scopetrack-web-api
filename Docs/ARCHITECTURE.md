@@ -40,14 +40,14 @@ The project is intentionally split into two repositories:
 /ScopeTrack.Application
 /ScopeTrack.Infrastructure
 
-/Tests
-  /ScopeTrack.Domain.Tests
-  /ScopeTrack.Application.Tests
+/ScopeTrack.Tests
+  /API/Controllers
+  /Application/Services
+  /Domain/Entities
 
 /Docs
   ARCHITECTURE.md
   API_CONTRACTS.md
-  IMPLEMENTATION.md
 
 README.md
 ScopeTrack.slnx
@@ -77,6 +77,7 @@ angular.json
 * Entity Framework Core 10
 * FluentValidation 12
 * xUnit (tests)
+* FluentAssertions (test assertions)
 
 ### Frontend
 * Angular
@@ -123,25 +124,64 @@ No shortcuts across layers.
 
 ## 6. Domain Model
 
-### 6.1 Core Aggregates
+### 6.1 Core Entities
 
-#### Client
-* Identity
-* Name
-* Contact information (email)
-* Status (Active/Inactive)
-* Collection of Contracts
+#### ClientModel
+* Identity: Guid Id
+* Name: string
+* Email: string (unique)
+* Status: ClientStatus enum (Active/Inactive)
+* CreatedAt DateTime
+* UpdatedAt: DateTime
+* Relationships: Collection of ContractModel
 
-#### Contract
-* Belongs to a Client
-* Contract type (FixedPrice/TimeBased)
-* Status lifecycle (Draft → Active → Completed/Archived)
-* Collection of Deliverables
+**Business Methods:**
+* `UpdateDetails(name, email)` — Updates client information
+* `ToggleStatus()` — Switches between Active/Inactive
+* `AddContract(contract)` — Adds contract (enforces client must be Active)
 
-#### Deliverable
-* Belongs to a Contract
-* Title, description, optional due date
-* Status lifecycle (Pending → InProgress → Completed)
+#### ContractModel
+* Identity: Guid Id
+* ClientId: Guid
+* Title: string
+* Description: string (optional)
+* Type: ContractType enum (FixedPrice/TimeBased)
+* Status: ContractStatus enum
+* CreatedAt: DateTime
+* UpdatedAt: DateTime
+* Relationships: Collection of DeliverableModel
+
+**Business Methods:**
+* `Activate()` — Transitions from Draft to Active (enforces deliverable requirement)
+* `Complete()` — Transitions from Active to Completed
+* `Archive()` — Transitions to Archived state
+* `AddDeliverable(deliverable)` — Adds deliverable (enforce contract must be Draft/Active)
+
+#### DeliverableModel
+* Identity: Guid Id
+* Contract Id: Guid
+* Title: string
+* Description: string (optional)
+* Status: DeliverableStatus enum (Pending/InProgress/Completed/Cancelled)
+* DueDate: DateTime (optional)
+* CreatedAt: DateTime
+* UpdatedAt DateTime
+
+**Business Methods:**
+* `ChangeStatus(newStatus, contractStatus) — Updates status with validation
+
+#### ActivityLogModel
+* Identity: Guid Id
+* EntityType: ActivityEntityType enum (Client/Contract/Deliverable)
+* EntityId: Guid
+* ActivityType: ActivityType enum (Created/Updated/StatusChanged)
+* Description: string
+* Timestamp: DateTime
+
+**Characteristics:**
+* Immutable (no setter methods)
+* Created only via constructor
+* Append-only record
 
 ---
 
@@ -159,19 +199,16 @@ These rules live **only** in the Domain layer.
 
 ## 7. Application Layer
 
-### 7.1 Use Case Orientation
-Each operation is modeled as a use case:
-* CreateClient
-* UpdateClient
-* ToggleClientStatus
-* AddContractToClient
-* UpdateContractStatus
-* AddDeliverableToContract
-* UpdateDeliverableStatus
+### 7.1 Service-Based Architecture
+Each aggregate has a dedicated service:
+* `ClientService` — Client operations
+* `ContractService` — Contract operations
+* `DeliverableService` — Deliverable operations
+* `ActityLogService` — Activity log queries
 
-Use cases:
+Services:
 * receive validated input (DTOs)
-* load aggregates from persistence
+* load entities from DbContext
 * invoke domain behavior
 * persist changes
 * return results via `RequestResult<T>`
@@ -183,8 +220,10 @@ No business logic lives in the Application layer.
 ### 7.2 DTOs and Mapping
 * DTOs are used at boundaries only
 * Domain models are never exposed externally
-* Mapping is explicit (no AutoMapper or reflection magic)
+* Mapping is explicit via static mapper classes
 * Each entity has dedicated mapper (ClientMapper, ContractMapper, etc.)
+
+**No AutoMapper** — Manula mapping for clarity and control.
 
 ### 7.3 Result Pattern
 The application uses `RequestResult<T>` to represent success or failure:
@@ -204,13 +243,22 @@ This allows services to return failures without throwing exceptions for expected
 * Controlled navigation usage
 * Migrations tracked in Infrastructure layer
 
-### 8.2 Concurrency Handling
+### 8.2 Direct DbContext Usage
+**No Repository Pattern** — Services use `ScopeTrackDbContext` directly because:
+* EF Core DbSet already provides repository-like abstraction
+* No need for an extra layer of indirection
+* DbContext is mockable for testing if needed
+* Simplifies codebase
+
+If multiple ORMs were requires, repositories would make sense.
+
+### 8.3 Concurrency Handling
 * Database-level unique constraints (e.g., Client.Email)
 * Early validation checks for better UX
 * Exception handling for constraint violations
 * No optimistic concurrency tokens (yet)
 
-### 8.3 No Soft Deletion
+### 8.4 No Soft Deletion
 * Entities are physically deleted via cascade
 * Activity logs preserve historical record
 * No IsDeleted flags or query filters
@@ -248,9 +296,9 @@ The `ActivityLogInterceptor` in the Infrastructure layer:
 This ensures atomic logging—logs are only written if entity changes succeed.
 
 ### 9.3 What Gets Logged
-* **Client:** Created, Updated(name/email), Status Changed
-* **Contract:** Created, Status Changed
-* **Deliverable:** Created, Status Changed
+* **Client:** Created, Updated(name/email), StatusChanged
+* **Contract:** Created, StatusChanged
+* **Deliverable:** Created, StatusChanged
 
 Each log entry includes:
 * Entity type and ID
@@ -288,9 +336,10 @@ No silent failures.
 
 ### 10.3 Response Patterns
 * **200 OK:** Success with entity data
+* **201 Created:** Resource created (includes Location header)
 * **400 Bad Request:** Validation failure with structured errors
 * **404 Not Found:** Entity not found
-* **409 Conflict:** Business rule violation (e.g., duplicate email)
+* **409 Conflict:** Business rule violation (e.g., invalid status transition)
 
 ---
 
@@ -318,15 +367,21 @@ The UI exists to **exercise and demonstrate** the backend.
 * Test status transitions
 * No mocks (pure unit tests)
 
+Located in `ScopeTrack.Tests/Domain/Entities/`
+
 ### Application Tests
 * Use case behavior
-* Interaction between layers
-* Infrastructure mocked where needed
+* Service interactions
+* In-memory database for isolation
+
+Located in `ScopeTrack.Tests/Application/Services/`
 
 ### Integration Tests
 * API endpoints
-* Database interactions
 * Full request/response cycle
+* Uses `TestApiFactory` with in-memory database
+
+Located in `ScopeTrack.Tests/API/Controllers/`
 
 No UI tests (initially).
 
@@ -354,6 +409,7 @@ Key principles guiding decisions:
 * Keep scope intentionally narrow
 * Optimize for maintainability, not novelty
 * Use framework featuress appropriately (interceptors for cross-cutting concerns)
+* Direct DbContext usage over respository abstraction
 
 This project values **correctness and structure** over feature count.
 
@@ -396,7 +452,7 @@ Input validation happens at the API boundary because:
 * Keeps validation error separate from business failures
 * Makes it easy to return proper HTTP status codes
 
-### Why No Repository Pattern?
+### 16.3 Why No Repository Pattern?
 Services directly use DbContext because:
 * EF Core DbSet already provides repository-like abstraction
 * No need for an extra layer of indirection
@@ -405,12 +461,230 @@ Services directly use DbContext because:
 
 If multiple ORMs were required, repositories would make sense.
 
+### 16.4 Why Static Mappers Instead of AutoMapper?
+Manual mapping via static methods because:
+* Explicit and easier to debug
+* No reflection overhead
+* Clear mapping logic visible in code
+* No configuration conventions to remember
+* Simpler for small to medium projects
+
+### 16.5 Why RequestResult<T> Pattern?
+Instead of throwing exceptions for expected failures:
+* Clearer intent (success vs. failure)
+* Better control flow
+* Easier to test
+* Exceptions reserved for unexpected errors
+
+## 17. Data Flow
+
+### Command Flow (Write Operations)
+```text
+1. HTTP Request → Controller
+2. Controller validates with FluentValidation
+3. Controller → Service Method
+4. Service → DbContext (load entity)
+5. Service → Domain entity (business logic)
+6. Service → DbContext (save changes)
+7. ActivityLogInterceptor creates logs
+8. Response ← Controller (via RequestReault<T>)
+```
+
+### Query Flow (Read Operations)
+```text
+1. HTTP Request → Controller
+2. Controller → Service Method
+3. Service → DbContext (query with Include for navigation properties)
+4. Service → Mapper (entity to DTO)
+5. Response ← Controller
+```
+
 ---
 
-## 17. Conclusion
+## 18. Database Design
+
+### Entity Framework Core Configuration
+* Fluent API for all entity mappings (no attributes)
+* Enum conversion to int
+* Relationship configurations
+* Index definitions
+* Unique constraints
+
+### Key Relationships
+* `Client` → `Contract` (one-to-many, cascade delete)
+* `Contract` → `Deliverable` (one-to-many, cascade delete)
+* `ActivityLog` (independent, references entities by ID and type)
+
+### Migration Strategy
+* Code-first migrations
+* Version controlled schema changes
+* Migrations stored in Infrasctructure project
+
+---
+
+## 19. Error Handling
+
+### Exception Strategy
+* Domain methods throw `InvalidOperationException` for business rule violations
+* Services catch and convert to `RequestResult<T>.Failure()`
+* Controllers return appropriate HTTP status code
+* Global exceptions handler for unexpected error (implicit in ASP.NET Core)
+
+### HTTP Status Code
+* `200 OK` — Successful retrieval or update
+* `201 Created` — Resource created (with Location header)
+* `400 Bad Request` — Validation error
+* `404 Not Found` — Resource not found
+* `409 Conflict` — Business rule violation
+* `500 Internal Server Error` — Unexpected error
+
+---
+
+## 20. Performance Considerations
+
+### Query Optimization
+* Eager loding for related entities via `Include()`
+* AsNoTracking for read-only queries
+* Projection to DTOs in queries
+* Indexed foreign keys
+* Composite index on ActivityLog (EntityType, EntityId)
+
+### Async/Await Throughout
+* All database operations are async
+* All controller actions are async
+* Improves scalability
+
+---
+
+## 21. Security Considerations (Future Implementation)
+
+### Authentication
+* JWT bearer tokens
+* Identity integration
+* Role-based access control
+
+### Authorization
+* Resource-based authorization
+* Ownership verification
+* Admin vs. user permissions
+
+### Data Protection
+* SQL injection prevention (parameterized queries via EF Core)
+* Input sanitization via validation
+* HTTPS enforcement
+* CORS configuration
+
+---
+
+## 22. CORS Configuration
+* Development: `AllowAll` policy for ease of testing
+* Production: Should restrict to specific origins
+
+Configured in `Program.cs`:
+```csharp
+builder.Services.AddCores(options =>
+{
+  options.AddPolicy("AllowAll", policy =>
+  {
+    policy.AllowAnyOrigin()
+      .AllowAnyMethod()
+      .AllowAnyHeaded();
+  });
+});
+```
+
+---
+
+## 23. Dependency Injection
+
+### Service Registration
+All dependencies registered in `Program.cs`:
+```csharp
+// Database
+builder.Services.AddDbContext<ScopeTrackDbContext>(options =>
+{
+  options.UseSqlServer(connectionString);
+  options.AddInterceptors(new ActivityLogInterceptor());
+});
+
+// Services
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IContractService, ClientService>();
+etc.
+
+// Validators
+builder.Services.AddValidatorsFromAssemblyContaining<ClientPostDtoValidator>();
+```
+
+### Service Lifetime
+* **Scoped:** DbContext, Services (per HTTP request)
+* **Transient:** Validators (created each time)
+* **Singleton:** Configuration, Logging
+
+---
+
+## 24. Development Workflow
+
+## Adding New Features
+1. Define domain entities and business methods
+2. Create application DTOs
+3. Implement service methods
+4. Add API endpoints
+5. Create validators
+6. Write tests
+7. Update documentation
+
+### Modifying Existing Features
+1. Identify affected layer
+2. Update domain logic if needed
+3. Modify service methods
+4. Update API contracts if needed
+5. Update validators
+6. Migrate database if required
+7. Update tests and documentation
+
+---
+
+## 25. CI/CD Pipeline
+
+### GitHub Actions Workflow
+Located in `.github/workflows/ci.yml`:
+* Triggers on push to main and pull requests
+* Steps:
+  1. Checkout repository
+  2. Setup .NET 10 SDK
+  3. Restore dependencies
+  4. Build solution
+  5. Runstests with code coverage
+  6. Upload coverage to Codecov
+
+### Code Coverage
+* Target: High coverage on Domain and Application layer
+* Tool: Codecov
+* Badge displayed in README
+
+---
+
+## 26. Conclusion
 ScopeTrack is designed as:
 * a realistic backend system
 * a clear demonstration of architectural discipline
 * a foundation that could evolve without rework
 
 The project emphasizes **thinking in systems,** not just shipping code.
+
+**Core Strengths:**
+* Clean Architecture with explicit boundaries
+* Rich domain models with business logic
+* Automatic activity logging via interceptors
+* Comprehensive testing at all layers
+* Clear separation of concerns
+* Direct, pragmatic implementations (no over-engineering)
+
+**Intentional Simplicity:**
+* No repository pattern (DbContext is sufficient)
+* No AutoMapper (static mappers are clearer)
+* No CQRS/MediatR (services are sufficient)
+* No event sourcing (activity logs are sufficient)
+
+This architecture balances **enterprise patterns** with **pragmatic simplicity** for a system of this scope.
