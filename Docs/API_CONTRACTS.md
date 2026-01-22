@@ -78,8 +78,8 @@ Client not found
 **Request:**
 ```json
 {
-  "name": Acme Corporation,
-  "email": "info@acme.corp"
+  "name": Acme Corporation",
+  "email": "info@acme.com"
 }
 ```
 **Validation Rules:**
@@ -91,7 +91,7 @@ Client not found
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "name": "Acme Corporation",
-  "contactEmail": "info@acme.corp",
+  "contactEmail": "info@acme.com",
   "status": "Active",
   "createdAt": "2026-01-13T15:00:00Z",
   "updatedAt": "2026-01-13T20:00:00Z",
