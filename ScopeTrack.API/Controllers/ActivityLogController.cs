@@ -40,9 +40,9 @@ namespace ScopeTrack.API.Controllers
     {
       entityType = value.ToLowerInvariant() switch
       {
-        "client" => ActivityEntityType.Client,
-        "contract" => ActivityEntityType.Contract,
-        "deliverable" => ActivityEntityType.Deliverable,
+        "clients" => ActivityEntityType.Client,
+        "contracts" => ActivityEntityType.Contract,
+        "deliverables" => ActivityEntityType.Deliverable,
         _ => default
       };
 
